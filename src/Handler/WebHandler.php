@@ -16,6 +16,12 @@ class WebHandler extends AbstractHandler implements HandlerInterface
     /** @var WebOutput */
     protected $output;
 
+    public function __construct($methodname)
+    {
+        parent::__construct($methodname);
+        $this->output = new WebOutput();
+    }
+
     public function triggerOutput()
     {
         echo $this->message;

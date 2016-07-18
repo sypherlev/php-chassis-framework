@@ -14,7 +14,8 @@ class RouteCollection extends Router
         $this->addRoute('GET', '/', 'MyApp\\Handler\\Index');
         $this->addRoute('GET', '/auth/login', 'MyApp\\Handler\\AuthHandler:login');
         $this->addRoute('GET', '/auth/create', 'MyApp\\Handler\\AuthHandler:create');
-        
-        //$this->addRoute('GET', '/auth/create', 'MyApp\\Handler\\Auth:create');
+
+        // AUTH TESTING
+        $this->addRoute('GET', '/auth/test', 'MyApp\\Handler\\SecureHandler:isAllowed');
     }
 }

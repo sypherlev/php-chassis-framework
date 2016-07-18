@@ -29,7 +29,7 @@ class AuthLogic
     
     public function create($user) {
         die('ADMIN ACCESS ONLY'); // to do - set this up properly
-        $passhash = password_hash('ignition', PASSWORD_DEFAULT);
+        $passhash = password_hash('thisisnotapassword', PASSWORD_DEFAULT);
         $authkeyhash = time().'.'.uniqid('ap_', true);
         $user = array(
             'username' => 'glhadmin',

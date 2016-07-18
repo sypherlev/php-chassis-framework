@@ -38,8 +38,17 @@ class Ignition
             $router = new $routecollection();
             $router->readyDispatcher();
             $response = $router->trigger();
-            if (!isset($response->handler)) {
+            if (is_null($response)) {
+                http_response_code(404);
                 die('404 Page not found.');
+            }
+            if ($response === false) {
+                http_response_code(405);
+                die('405 HTTP method not allowed.');
+            }
+            if (!isset($response->handler)) {
+                http_response_code(500);
+                die('500 Internal server error.');
             }
             $request = new WebRequest();
             $handlername = $response->handler;
@@ -50,6 +59,9 @@ class Ignition
                 $methodname = $possiblemethod[1];
             }
             $this->handler = new $handlername($methodname);
+            if(!empty($response->segments)) {
+                $request->setSegmentData($response->segments);
+            }
             $this->handler->setup($request);
             if ($methodname != null && $this->handler->isExecutable()) {
                 $this->handler->execute();

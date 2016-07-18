@@ -135,6 +135,8 @@ class Datasource
      * Executes a raw prepared SQL statement on the current database connection without
      * using the compiler. Returns an error, a boolean for success/fail, or an array of results
      *
+     * TO DO: make the return values less stupid
+     *
      * @param $sql - a prepared SQL statement
      * @param $values - an array of corresponding bind values: array(':vm1' => $value)
      * @param string $fetch - (optional) set as 'fetch' or 'fetchAll' to get results
@@ -198,6 +200,8 @@ class Datasource
     public function getRecordedOutput() {
         return $this->recording_output;
     }
+
+    // does whatever it says
 
     public function lastIdFrom($table, $primaryKeyname = 'id')
     {
@@ -294,6 +298,12 @@ class Datasource
         return $this;
     }
 
+    /**
+     * Set the primary table on the query
+     *
+     * @param string $tablename
+     * @return $this
+     */
     public function table($tablename)
     {
         $this->currentquery->table = $tablename;
@@ -317,6 +327,12 @@ class Datasource
         return $this;
     }
 
+    /**
+     * Used only with UPDATE
+     *
+     * @param array $set - array('column' => $variable, ... )
+     * @return $this
+     */
     public function set(Array $set)
     {
         $this->currentquery->set = $set;
@@ -428,6 +444,7 @@ class Datasource
     }
 
     // PRIVATE FUNCTIONS
+    // LEAVE THIS STUFF ALONE
 
     // UTILITY METHODS
     private function generateNewPDO()

@@ -4,12 +4,16 @@ namespace Chassis\Output;
 
 class WebOutput {
 
-    private $data = array();
-    
-    public function __construct(Array $data) {
-        $this->data = $data;
+    private $data = [];
+
+    public function setHTTPCode($code) {
+        $this->httpcode = (int)$code;
     }
-    
+
+    public function setOutputMessage($message) {
+        $this->message = $message;
+    }
+
     public function out() {
         print_r($this->data);
     }

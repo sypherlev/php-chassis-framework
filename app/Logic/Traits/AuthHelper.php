@@ -3,21 +3,38 @@
 namespace MyApp\Logic\Traits;
 
 use MyApp\Data\UserAccountData;
+use Chassis\Data\Datasource;
 
 trait AuthHelper
 {
     public $currentUserRoles = array();
+    public $allowedRoles = [];
+    public $currentUser;
 
-    public function setRoles(UserAccountData $source) {
+    public function setRoles(Datasource $source) {
+        $usersource = new UserAccountData($source);
         $authkey = $this->getAuthHeader();
         if($authkey) {
-            $this->currentUserRoles = $source->findRolesByAuthKey($authkey);
+            $this->currentUser = $usersource->findUserByAuthKey($authkey);
+            $roles = $usersource->findRolesByAuthKey($authkey);
+            if(is_array($roles)) {
+                $this->currentUserRoles = $roles;
+            }
         }
     }
-    
+
     public function checkRole($user_role) {
         foreach ($this->currentUserRoles as $role) {
             if($role->user_role = $user_role) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isAllowed() {
+        foreach ($this->currentUserRoles as $role) {
+            if(in_array($role->user_role, $this->allowedRoles)) {
                 return true;
             }
         }
