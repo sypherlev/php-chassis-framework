@@ -2,8 +2,5 @@
 .idea/
 app/tests/
 composer.lock
-/bootstraptheme/
 .env
-.env.prod
-app/Handler/cronoutput.log
 /web/php_errors.log
