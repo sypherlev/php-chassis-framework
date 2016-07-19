@@ -3,8 +3,8 @@
 namespace Chassis;
 
 use Chassis\Action\ActionInterface;
-use Chassis\Action\Request\CliRequest;
-use Chassis\Action\Request\WebRequest;
+use Chassis\Request\CliRequest;
+use Chassis\Request\WebRequest;
 
 class Ignition
 {

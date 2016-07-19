@@ -1,6 +1,6 @@
 <?php
 
-namespace Chassis\Action\Request;
+namespace Chassis\Request;
 
 
 class CliRequest extends AbstractRequest
