@@ -23,13 +23,11 @@ class Ignition
                 $actionname = $possiblemethod[0];
                 $methodname = $possiblemethod[1];
             }
-
-            $this->action = new $actionname($methodname);
-            $this->action->setup($request);
+            $this->action = new $actionname($request);
+            $this->action->setup($methodname);
             if ($methodname != null && $this->action->isExecutable()) {
                 $this->action->execute();
             }
-            $this->action->triggerOutput();
 
         } else {
             // Not in cli-mode; divert to the router
@@ -61,8 +59,8 @@ class Ignition
                 $actionname = $possiblemethod[0];
                 $methodname = $possiblemethod[1];
             }
-            $this->action = new $actionname($methodname);
-            $this->action->setup($request);
+            $this->action = new $actionname($request);
+            $this->action->setup($methodname);
             if ($methodname != null && $this->action->isExecutable()) {
                 $this->action->execute();
             }

@@ -2,24 +2,14 @@
 
 namespace Chassis\Action;
 
-use Chassis\Action\Request\RequestInterface;
-
-class BaseAction implements ActionInterface
+abstract class BaseAction implements ActionInterface
 {
     protected $executable = true;
     protected $methodname;
 
-    /** @var RequestInterface */
-    protected $request;
-
-    public function __construct($methodname)
+    public function setup($methodname)
     {
         $this->methodname = $methodname;
-    }
-
-    public function setup($request)
-    {
-        $this->request = $request;
     }
 
     public function execute()
