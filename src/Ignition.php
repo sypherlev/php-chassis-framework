@@ -2,34 +2,34 @@
 
 namespace Chassis;
 
-use Chassis\Handler\HandlerInterface;
-use Chassis\Handler\Request\CliRequest;
-use Chassis\Handler\Request\WebRequest;
+use Chassis\Action\ActionInterface;
+use Chassis\Action\Request\CliRequest;
+use Chassis\Action\Request\WebRequest;
 
 class Ignition
 {
-    /** @var HandlerInterface */
-    protected $handler;
+    /** @var ActionInterface */
+    protected $action;
 
     public function run()
     {
         if (php_sapi_name() == "cli") {
-            // In cli-mode; setup CLI Request and go to CLI handler
+            // In cli-mode; setup CLI Request and go to CLI action
             $request = new CliRequest();
             $methodname = null;
-            $handlername = $request->getHandler();
-            $possiblemethod = explode(':', $handlername);
+            $actionname = $request->getAction();
+            $possiblemethod = explode(':', $actionname);
             if (count($possiblemethod) > 1) {
-                $handlername = $possiblemethod[0];
+                $actionname = $possiblemethod[0];
                 $methodname = $possiblemethod[1];
             }
 
-            $this->handler = new $handlername($methodname);
-            $this->handler->setup($request);
-            if ($methodname != null && $this->handler->isExecutable()) {
-                $this->handler->execute();
+            $this->action = new $actionname($methodname);
+            $this->action->setup($request);
+            if ($methodname != null && $this->action->isExecutable()) {
+                $this->action->execute();
             }
-            $this->handler->triggerOutput();
+            $this->action->triggerOutput();
 
         } else {
             // Not in cli-mode; divert to the router
@@ -46,27 +46,26 @@ class Ignition
                 http_response_code(405);
                 die('405 HTTP method not allowed.');
             }
-            if (!isset($response->handler)) {
+            if (!isset($response->action)) {
                 http_response_code(500);
                 die('500 Internal server error.');
             }
             $request = new WebRequest();
-            $handlername = $response->handler;
-            $methodname = null;
-            $possiblemethod = explode(':', $handlername);
-            if (count($possiblemethod) > 1) {
-                $handlername = $possiblemethod[0];
-                $methodname = $possiblemethod[1];
-            }
-            $this->handler = new $handlername($methodname);
             if(!empty($response->segments)) {
                 $request->setSegmentData($response->segments);
             }
-            $this->handler->setup($request);
-            if ($methodname != null && $this->handler->isExecutable()) {
-                $this->handler->execute();
+            $actionname = $response->action;
+            $methodname = null;
+            $possiblemethod = explode(':', $actionname);
+            if (count($possiblemethod) > 1) {
+                $actionname = $possiblemethod[0];
+                $methodname = $possiblemethod[1];
             }
-            $this->handler->triggerOutput();
+            $this->action = new $actionname($methodname);
+            $this->action->setup($request);
+            if ($methodname != null && $this->action->isExecutable()) {
+                $this->action->execute();
+            }
         }
     }
 }

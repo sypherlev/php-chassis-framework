@@ -14,7 +14,7 @@ class Router
     public function readyDispatcher() {
         $this->dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
             foreach ($this->routes as $route) {
-                $r->addRoute($route->method, $route->pattern, $route->handler);
+                $r->addRoute($route->method, $route->pattern, $route->action);
             }
         });
     }
@@ -40,7 +40,7 @@ class Router
                 break;
             case FastRoute\Dispatcher::FOUND:
                 $ready = new \stdClass();
-                $ready->handler = $routeInfo[1];
+                $ready->action = $routeInfo[1];
                 $ready->segments = explode('/', ltrim($uri, '/'));
                 break;
         }
@@ -51,7 +51,7 @@ class Router
         $newroute = new \stdClass();
         $newroute->method = $method;
         $newroute->pattern = $pattern;
-        $newroute->handler = $classname;
+        $newroute->action = $classname;
         $this->routes[] = $newroute;
     }
 }

@@ -11,11 +11,11 @@ class RouteCollection extends Router
     public function __construct()
     {
         // ADD ALL YOUR ROUTES HERE
-        $this->addRoute('GET', '/', 'MyApp\\Handler\\Index');
-        $this->addRoute('GET', '/auth/login', 'MyApp\\Handler\\AuthHandler:login');
-        $this->addRoute('GET', '/auth/create', 'MyApp\\Handler\\AuthHandler:create');
+        $this->addRoute('GET', '/', 'MyApp\\Index\\IndexAction');
+        $this->addRoute('GET', '/auth/login', 'MyApp\\Auth\\AuthAction:login');
+        $this->addRoute('GET', '/auth/create', 'MyApp\\Auth\\AuthAction:create');
 
         // AUTH TESTING
-        $this->addRoute('GET', '/auth/test', 'MyApp\\Handler\\SecureHandler:isAllowed');
+        $this->addRoute('GET', '/secure/test', 'MyApp\\Secure\\SecureAction:isAllowed');
     }
 }
