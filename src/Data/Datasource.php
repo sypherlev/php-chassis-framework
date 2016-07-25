@@ -188,19 +188,6 @@ class Datasource
         return $this->config->database;
     }
 
-    // start and stop recording queries, bindings, and statement errors
-    public function startRecording() {
-        $this->recording = true;
-        $this->recording_output = [];
-    }
-    public function stopRecording() {
-        $this->recording = false;
-    }
-
-    public function getRecordedOutput() {
-        return $this->recording_output;
-    }
-
     // does whatever it says
 
     public function lastIdFrom($table, $primaryKeyname = 'id')
@@ -245,6 +232,50 @@ class Datasource
         else {
             return false;
         }
+    }
+
+    // TESTING METHODS
+    // these methods are used to check outputs and do query testing
+
+    // start and stop recording queries, bindings, and statement errors
+    public function startRecording() {
+        $this->recording = true;
+        $this->recording_output = [];
+    }
+    public function stopRecording() {
+        $this->recording = false;
+    }
+
+    public function getRecordedOutput() {
+        return $this->recording_output;
+    }
+
+    /**
+     * Copies and returns the current query - useful for storing/rerunning failed queries
+     *
+     * @return \stdClass $query
+     */
+    public function cloneQuery() {
+        return clone $this->currentquery;
+    }
+
+    /**
+     * Sets the current query to a cloned copy from $this->cloneQuery
+     *
+     * @param $query
+     */
+    public function setQuery($query) {
+        $this->currentquery = $query;
+    }
+
+    /**
+     * Returns the current raw SQL statement based on the parameters in $this->currentquery
+     * or throws an \Exception if required elements are missing
+     *
+     * @return mixed
+     */
+    public function getCurrentSQL() {
+        return $this->generateStatement();
     }
 
     // COMPILER CHAIN METHODS
