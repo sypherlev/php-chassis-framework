@@ -17,9 +17,18 @@ class DataObject
     protected $source;
     protected $tablename;
 
-    public function __construct(Datasource $source, $tableName)
+    public function __construct(Datasource $source)
     {
         $this->source = $source;
+    }
+
+    /**
+     * Set the table name for use in this object.
+     *
+     * @param $tableName
+     * @throws \Exception
+     */
+    public function setTableName($tableName) {
         if ($tableName != '') {
             $this->tablename = $tableName;
         }
