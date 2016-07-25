@@ -5,8 +5,7 @@
  * This adds basic CRUD operations for a single table. It is NOT designed to replace all queries on a table;
  * anything beyond CRUD should use $this->source and construct the query directly.
  *
- * This class is solely used to speed up development by providing some simple functions, and should be extended
- * as needed.
+ * This class is solely used to speed up development by providing some basic functions.
  *
  * @package Chassis\Data
  */
@@ -59,11 +58,14 @@ class DataObject
      * @param $value
      * @return array|bool
      */
-    public function findMany($columnName, $value) {
+    public function findMany($columnName, $value, $limit = 0) {
         $this->source
             ->select()
             ->table($this->tablename)
             ->where([$columnName => $value]);
+        if($limit > 0) {
+            $this->source->limit($limit);
+        }
         $querycopy = $this->source->cloneQuery();
         $result = $this->source->many();
         if(!$result) {
@@ -93,7 +95,7 @@ class DataObject
             return false;
         }
         else {
-            return true;
+            return $this->source->lastInsertId();
         }
     }
 
