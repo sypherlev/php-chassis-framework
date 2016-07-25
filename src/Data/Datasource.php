@@ -760,10 +760,13 @@ class Datasource
             $realcolumnname = rtrim($realcolumnname, ')');
             $compiledColumnName = 'COUNT(`' .$table. '`.`' . preg_replace($this->SANITIZER_REGEX, '', $realcolumnname). '`)';
         }
+        else if($columnName == '*') {
+            $compiledColumnName = '`' .$table. '`.*';
+        }
         else {
             $compiledColumnName = '`' .$table. '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnName). '`';
         }
-        if($alias != '') {
+        if($alias != '' && $columnName != '*') {
             $compiledColumnName .= ' AS `' . preg_replace($this->SANITIZER_REGEX, '', $alias) . '`';
         }
         return $compiledColumnName;
