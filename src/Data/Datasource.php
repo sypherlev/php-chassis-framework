@@ -400,58 +400,32 @@ class Datasource
         return $this;
     }
 
-    /**
-     * Accepts a new $join and adds it to the query
-     *
-     * @param $join - new $join object created with $this->createJoin
-     * @return $this
-     */
-    public function join($join)
-    {
-        if (!isset($this->currentquery->joins)) {
-            $this->currentquery->joins = [];
-        }
-        $this->currentquery->joins[] = $join;
-        return $this;
-    }
-
-    /**
-     * Accepts a new $where and adds it to the query
-     *
-     * @param $where - new $where object created with $this->createWhere
-     * @return $this
-     */
-    public function where($where)
-    {
-        if (!isset($this->currentquery->wheres)) {
-            $this->currentquery->wheres = [];
-        }
-        $this->currentquery->wheres[] = $where;
-        return $this;
-    }
-
     // COMPILER NON-CHAIN METHODS
     // these are separated to allow for more complex queries
 
     /**
-     * Creates a join object to pass to $this->join
+     * Adds a JOIN clause
      *
      * @param $jointable - tablename
      * @param array $on - must be in the format array('tableone' => 'column, 'tabletwo' => 'column')
      * @param string $type - inner|full|left|right
-     * @return \stdClass
+     * @return $this
      */
-    public function createJoin($jointable, Array $on, $type = 'inner')
+    public function join($jointable, Array $on, $type = 'inner')
     {
+        if (!isset($this->currentquery->joins)) {
+            $this->currentquery->joins = [];
+        }
         $newJoin = new \stdClass();
         $newJoin->table = $jointable;
         $newJoin->on = $on;
         $newJoin->type = $type;
-        return $newJoin;
+        $this->currentquery->joins[] = $newJoin;
+        return $this;
     }
 
     /**
-     * Creates a where object to pass to $this->where
+     * Adds a WHERE clause
      * Column names can use the format 'columnname operand' to use operands other than '=', e.g. 'id >'
      * Valid operands: >|<|>=|<=|like|is
      * If the tablename is not specified in the $where array parameter, $this->currentquery->table will be used
@@ -463,15 +437,19 @@ class Datasource
      *     array($tableone => array($column => $param, ...), $tabletwo => array($column => $param, ...), ...)
      * @param string $innercondition - AND|OR - used between clauses in the WHERE statement
      * @param string $outercondition - AND|OR - used to append this WHERE statement to the query
-     * @return \stdClass
+     * @return $this
      */
-    public function createWhere(Array $where, $innercondition = 'AND', $outercondition = 'AND')
+    public function where(Array $where, $innercondition = 'AND', $outercondition = 'AND')
     {
+        if (!isset($this->currentquery->wheres)) {
+            $this->currentquery->wheres = [];
+        }
         $newWhere = new \stdClass();
         $newWhere->clauses = $where;
         $newWhere->inner = $innercondition;
         $newWhere->outer = $outercondition;
-        return $newWhere;
+        $this->currentquery->wheres[] = $newWhere;
+        return $this;
     }
 
     // PRIVATE FUNCTIONS
