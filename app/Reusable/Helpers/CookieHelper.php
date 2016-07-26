@@ -1,9 +1,9 @@
 <?php
 
-namespace MyApp\Reusable\Traits;
+namespace MyApp\Reusable\Helpers;
 
 
-trait CookieHelper
+class CookieHelper
 {
     public function setCookie($name, $value, $expire, $overwrite = false) {
         if($this->getCookie($name) && $overwrite == false) {

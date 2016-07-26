@@ -1,9 +1,9 @@
 <?php
 
-namespace MyApp\Reusable\Traits;
+namespace MyApp\Reusable\Helpers;
 
 
-trait UrlParser
+class UrlHelper
 {
     public function generateUrlsafeName($name) {
         $urlname = urlencode(preg_replace('/[^A-Za-z0-9\-]/', '', str_replace(' ', '-', strtolower($name))));

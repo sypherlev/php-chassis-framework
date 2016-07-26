@@ -1,8 +1,8 @@
 <?php
 
-namespace MyApp\Reusable\Traits;
+namespace MyApp\Reusable\Helpers;
 
-trait RequestHelper
+class RequestHelper
 {
     public function curlRequestJSONResponse($url, $headers = []) {
         $curl = curl_init();
