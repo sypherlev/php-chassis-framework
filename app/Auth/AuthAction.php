@@ -2,10 +2,10 @@
 
 namespace MyApp\Auth;
 
-use Chassis\Action\BaseAction;
-use Chassis\Action\Request\WebRequest;
+use Chassis\Action\WebAction;
+use Chassis\Request\WebRequest;
 
-class AuthAction extends BaseAction
+class AuthAction extends WebAction
 {
     private $authservice;
 
@@ -14,6 +14,7 @@ class AuthAction extends BaseAction
 
     public function __construct(WebRequest $request)
     {
+        parent::__construct($request);
         $this->authservice = new AuthService();
         $this->responder = new AuthResponder();
         $this->request = $request;

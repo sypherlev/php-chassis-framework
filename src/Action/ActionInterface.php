@@ -2,6 +2,8 @@
 
 namespace Chassis\Action;
 
+use Chassis\Request\RequestInterface;
+
 interface ActionInterface
 {
     public function setup($methodname);

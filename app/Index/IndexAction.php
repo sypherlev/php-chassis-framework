@@ -2,9 +2,9 @@
 
 namespace MyApp\Index;
 
-use Chassis\Action\BaseAction;
+use Chassis\Action\WebAction;
 
-class IndexAction extends BaseAction
+class IndexAction extends WebAction
 {
     private $responder;
 

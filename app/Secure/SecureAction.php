@@ -2,10 +2,10 @@
 
 namespace MyApp\Secure;
 
-use Chassis\Action\BaseAction;
-use Chassis\Action\Request\WebRequest;
+use Chassis\Action\WebAction;
+use Chassis\Request\WebRequest;
 
-class SecureAction extends BaseAction
+class SecureAction extends WebAction
 {
     private $secureservice;
     private $responder;
@@ -13,6 +13,7 @@ class SecureAction extends BaseAction
 
     public function __construct(WebRequest $request)
     {
+        parent::__construct($request);
         $this->secureservice = new SecureService();
         if(!$this->secureservice->isAllowed()) {
             $this->disableExecution();

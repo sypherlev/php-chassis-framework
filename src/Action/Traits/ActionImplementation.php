@@ -1,8 +1,8 @@
 <?php
 
-namespace Chassis\Action;
+namespace Chassis\Action\Traits;
 
-abstract class BaseAction implements ActionInterface
+trait ActionImplementation
 {
     protected $executable = true;
     protected $methodname;
