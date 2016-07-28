@@ -375,7 +375,7 @@ class Datasource
         if (!$count) {
             $this->currentquery->limit = (int)$limit; // ALWAYS CAST TO INT, THIS IS NOT SANITIZED
         } else {
-            $this->currentquery->limit = (int)$limit . ',' . (int)$count; // ALWAYS CAST TO INT, THIS IS NOT SANITIZED
+            $this->currentquery->limit = (int)$count . ',' . (int)$limit; // ALWAYS CAST TO INT, THIS IS NOT SANITIZED
         }
         return $this;
     }
@@ -427,9 +427,11 @@ class Datasource
     /**
      * Adds a WHERE clause
      * Column names can use the format 'columnname operand' to use operands other than '=', e.g. 'id >'
-     * Valid operands: >|<|>=|<=|like|is
+     * Valid operands: >|<|>=|<=|like|in
      * If the tablename is not specified in the $where array parameter, $this->currentquery->table will be used
      * instead
+     * Using the IN operand will make the param be treated as an array.
+     * Setting the param to NULL will force the operand to IS.
      *
      * @param array $where - has three possible types:
      *     array($column => $param, ...)
@@ -632,24 +634,68 @@ class Datasource
             $preppedClauses = [];
             foreach ($where->clauses as $tablename_or_variable => $clause) {
                 if (is_array($clause)) {
-                    foreach ($clause as $variable => $param) {
-                        if($param === null) {
-                            $paramchunk = $this->checkOperand($variable, $param) . ' NULL';
+                    if($this->checkOperand($tablename_or_variable, $clause) == 'IN') {
+                        $paramchunk = ' IN (';
+                        foreach ($clause as $p) {
+                            $this->currentquery->wherevalues[] = $p;
+                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
                         }
-                        else {
-                            $this->currentquery->wherevalues[] = $param;
-                            $paramchunk = $this->checkOperand($variable, $param) . ' :wh' . (count($this->currentquery->wherevalues) - 1);
+                        $paramchunk = substr($paramchunk, 0, -2).')';
+                        $variable = $this->stripOperands($tablename_or_variable);
+                        $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
+                    }
+                    else {
+                        foreach ($clause as $variable => $param) {
+                            if($param === null) {
+                                $paramchunk = $this->checkOperand($variable, $param) . ' NULL';
+                            }
+                            else {
+                                if($this->checkOperand($variable, $param) == 'IN') {
+                                    $paramchunk = ' IN (';
+                                    if(is_array($param)) {
+                                        foreach ($param as $p) {
+                                            $this->currentquery->wherevalues[] = $p;
+                                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
+                                        }
+                                    }
+                                    else {
+                                        $this->currentquery->wherevalues[] = $param;
+                                        $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1);
+                                    }
+                                    $paramchunk = substr($paramchunk, 0, -2).')';
+                                }
+                                else {
+                                    $this->currentquery->wherevalues[] = $param;
+                                    $paramchunk = $this->checkOperand($variable, $param) . ' :wh' . (count($this->currentquery->wherevalues) - 1);
+                                }
+                            }
+                            $variable = $this->stripOperands($variable);
+                            $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename_or_variable) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
                         }
-                        $variable = $this->stripOperands($variable);
-                        $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename_or_variable) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
                     }
                 } else {
                     if($clause === null) {
                         $paramchunk = $this->checkOperand($tablename_or_variable, $clause) . ' NULL';
                     }
                     else {
-                        $this->currentquery->wherevalues[] = $clause;
-                        $paramchunk = $this->checkOperand($tablename_or_variable, $clause) . ' :wh' . (count($this->currentquery->wherevalues) - 1);
+                        if($this->checkOperand($tablename_or_variable, $clause) == 'IN') {
+                            $paramchunk = ' IN (';
+                            if(is_array($clause)) {
+                                foreach ($clause as $p) {
+                                    $this->currentquery->wherevalues[] = $p;
+                                    $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
+                                }
+                            }
+                            else {
+                                $this->currentquery->wherevalues[] = $clause;
+                                $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1);
+                            }
+                            $paramchunk = substr($paramchunk, 0, -2).')';
+                        }
+                        else {
+                            $this->currentquery->wherevalues[] = $clause;
+                            $paramchunk = $this->checkOperand($tablename_or_variable, $clause) . ' :wh' . (count($this->currentquery->wherevalues) - 1);
+                        }
                     }
                     $tablename_or_variable = $this->stripOperands($tablename_or_variable);
                     $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $tablename_or_variable) . '` ' . $paramchunk;
@@ -728,7 +774,6 @@ class Datasource
 
     private function checkOperand($variable, $param)
     {
-
         if (strpos($variable, '>=') !== false) {
             return '>=';
         }
@@ -744,6 +789,9 @@ class Datasource
         if (strpos(strtolower($variable), ' like') !== false) {
             return 'LIKE';
         }
+        if (strpos(strtolower($variable), ' in') !== false) {
+            return 'IN';
+        }
         if($param === null) {
             return 'IS';
         }
@@ -754,6 +802,7 @@ class Datasource
     {
         $variable = strtolower($variable);
         $variable = preg_replace('/ like$/', '', $variable);
+        $variable = preg_replace('/ in$/', '', $variable);
         $variable = rtrim($variable, '>=');
         $variable = rtrim($variable, '<=');
         $variable = rtrim($variable, '>');
