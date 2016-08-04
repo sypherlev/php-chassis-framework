@@ -11,6 +11,7 @@ class EmailResponse implements ResponseInterface
     private $data;
     private $message;
     private $adddata = false;
+    private $devMode = true;
 
     public function insertOutputData($label, $data)
     {
@@ -30,7 +31,29 @@ class EmailResponse implements ResponseInterface
         else {
             $headers = '';
         }
-        mail ($this->emailto, $this->subject, $this->message, $headers);
+        if($this->devMode) {
+            $timestamp = time();
+            $folder = '..'. DIRECTORY_SEPARATOR . 'emails';
+            if(!file_exists($folder)) {
+                mkdir($folder);
+            }
+            $filename = $folder . DIRECTORY_SEPARATOR . "$timestamp-$this->emailto";
+            touch($filename);
+            if(file_exists($filename)) {
+                $compiledemail = "";
+                $compiledemail .= json_encode($headers)."\n\n";
+                $compiledemail .= "To: $this->emailto\n";
+                $compiledemail .= "Subject: $this->subject\n\n";
+                $compiledemail .= "$this->message";
+                file_put_contents($filename, $compiledemail);
+            }
+            else {
+                throw (new \Exception('Error: can\'t save email output'));
+            }
+        }
+        else {
+            mail($this->emailto, $this->subject, $this->message, $headers);
+        }
     }
 
     public function setEmailParams($emailto, $subject = 'Email Output', $message = '', $emailfrom = '', $adddata = false) {
@@ -39,6 +62,10 @@ class EmailResponse implements ResponseInterface
         $this->message = $message;
         $this->subject = $subject;
         $this->adddata = $adddata;
+    }
+
+    protected function setDevMode($switch = true) {
+        $this->devMode = $switch;
     }
 
     private function appendOutputData() {
