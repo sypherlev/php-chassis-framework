@@ -23,11 +23,18 @@ class DataObject
     }
 
     /**
-     * Set the table name for use in this object.
-     *
-     * @param $tableName
-     * @throws \Exception
+     * Expose the source recording methods in order to allow query error analysis
      */
+    public function startCap() {
+        $this->source->startRecording();
+    }
+    public function stopCap() {
+        $this->source->stopRecording();
+    }
+    public function cap() {
+        return $this->source->getRecordedOutput();
+    }
+
     public function setTableName($tableName) {
         if ($tableName != '') {
             $this->tablename = $tableName;
@@ -52,7 +59,7 @@ class DataObject
         $querycopy = $this->source->cloneQuery();
         $result = $this->source->one();
         if(!$result) {
-            $this->throwSQlError($querycopy, 'one', 'Unknown Error: retrieving single result from '.$this->tablename);
+            $this->throwSQlError($querycopy, 'one', 'Error retrieving single result from '.$this->tablename.', no result found');
             return false;
         }
         else {
@@ -186,8 +193,8 @@ class DataObject
         $this->source->{$terminationMethod}();
         $this->source->stopRecording();
         $output = $this->source->getRecordedOutput();
-        if(!empty($output)) {
-            throw (new \Exception('DataObject SQL Error:'.$output[0]['error']));
+        if(isset($output[0]['error'][0]) && $output[0]['error'][0] != 00000) {
+            throw (new \Exception('DataObject SQL Error: '.$output[0]['error'][0]));
         }
         else {
             throw (new \Exception('DataObject SQL '.$defaultMessage));
