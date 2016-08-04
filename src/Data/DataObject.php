@@ -140,12 +140,12 @@ class DataObject
      * @param array $newValues
      * @return bool
      */
-    public function update($columnName, $value, Array $newValues) {
+    public function update($wherecolumnName, $wherevalue, Array $newValues) {
         $this->source
             ->update()
             ->table($this->tablename)
             ->set($newValues)
-            ->where([$columnName => $value]);
+            ->where([$wherecolumnName => $wherevalue]);
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
         if(!$check) {
