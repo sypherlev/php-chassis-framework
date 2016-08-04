@@ -11,6 +11,7 @@ class WebRequest extends AbstractRequest
         $this->setPostData($_POST);
         $this->setQueryData($_GET);
         $this->setBodyData(file_get_contents("php://input"));
+        $this->setFileData($_FILES);
     }
 
     public function setSegmentData($segments) {
@@ -31,6 +32,10 @@ class WebRequest extends AbstractRequest
     
     public function setBodyData($input_string) {
         $this->requestdata['body'] = json_decode($input_string, true);
+    }
+
+    public function setFileData($files) {
+        $this->insertData('files', $files);
     }
 
     public function getCookieVar($name) {
@@ -75,6 +80,15 @@ class WebRequest extends AbstractRequest
         }
         else {
             throw(new \Exception("Can't access segment at position $int: Segment does not exist"));
+        }
+    }
+
+    public function getFileVar($name) {
+        if(isset($this->requestdata['files'][$name])) {
+            return $this->requestdata['files'][$name];
+        }
+        else {
+            throw(new \Exception("Can't access [$name] in FILES: Variable does not exist"));
         }
     }
 }
