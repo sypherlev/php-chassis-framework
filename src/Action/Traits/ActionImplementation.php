@@ -2,6 +2,8 @@
 
 namespace Chassis\Action\Traits;
 
+use Chassis\Response\ResponseInterface;
+
 trait ActionImplementation
 {
     protected $executable = true;
@@ -24,8 +26,9 @@ trait ActionImplementation
         return $this->executable;
     }
 
-    public function disableExecution() {
+    public function disableExecution(ResponseInterface $response) {
         $this->executable = false;
+        $response->out();
     }
 
     public function enableExecution()
