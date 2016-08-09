@@ -7,6 +7,7 @@ use Chassis\Response\WebResponse;
 class IndexResponder extends WebResponse
 {
     public function index() {
-        $this->insertOutputData('testing', 'Hello World');
+        $this->setTemplate(file_get_contents('index.html'));
+        $this->out();
     }
 }

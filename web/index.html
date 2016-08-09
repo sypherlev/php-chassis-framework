@@ -5,5 +5,28 @@
 </head>
 <body>
 <h3>Chassis Web Root</h3>
+<div data-chassis-var="singlevariable">
+    This is placeholder for a single variable loaded into the display
+</div>
+<div data-chassis-var="removeme">
+    This is placeholder for a variable that is not present and should be removed
+</div>
+<p data-chassis-repeat="repeatable">
+    <span data-chassis-var="content">This is a placeholder for repeatable content loaded into the display</span>
+    <span data-chassis-var="alsoremoveme">This is a placeholder for an internal removable element</span>
+</p>
+<div data-chassis-repeat="complex">
+    <h4 data-chassis-var="repeatcanhavevarstoo">This is a var inside a complex repeat</h4>
+    <ul>
+        <li data-chassis-repeat="firstrepeat">
+            <a data-chassis-var="repeatthis|href">First Repeat</a>
+        </li>
+    </ul>
+    <ol>
+        <li data-chassis-repeat="secondrepeat">
+            <span data-chassis-var="repeatthis">Second Repeat</span>
+        </li>
+    </ol>
+</div>
 </body>
 </html>
