@@ -11,7 +11,7 @@ class RouteCollection extends Router
     public function __construct()
     {
         // ADD ALL YOUR ROUTES HERE
-        $this->addRoute('GET', '/index.php', 'MyApp\\Index\\IndexAction:index');
+        $this->addRoute('GET', '/', 'MyApp\\Index\\IndexAction:index');
         $this->addRoute('GET', '/auth/login', 'MyApp\\Auth\\AuthAction:login');
         $this->addRoute('GET', '/auth/create', 'MyApp\\Auth\\AuthAction:create');
 
