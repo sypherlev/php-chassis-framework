@@ -27,6 +27,21 @@ class Migration
         }
     }
 
+    public function reset($filename = '') {
+        $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations'), array('.', '..'));
+        $reset = [];
+        foreach ($filelist as $file) {
+            if($filename != '' && $file != $filename) {
+                continue;
+            }
+            $filepath = '..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . $file;
+            $newfilepath = str_replace('_applied', '', $filepath);
+            rename($filepath, $newfilepath);
+            $reset[] = $newfilepath;
+        }
+        return $reset;
+    }
+
     public function migrate() {
         $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations'), array('.', '..'));
         if(empty($filelist)) {
@@ -34,7 +49,7 @@ class Migration
         }
         $unapplied = [];
         foreach ($filelist as $file) {
-            if (strpos($file, '_applied') === false || strpos($file, '.git') === false) {
+            if (strpos($file, '_applied') === false && strpos($file, '.git') === false) {
                 $unapplied[] = $file;
             }
         }

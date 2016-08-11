@@ -1,6 +1,6 @@
 <?php
 
-namespace PeerEffects\Reusable;
+namespace MyApp\Reusable;
 
 use Chassis\Action\CliAction;
 use Chassis\Data\Dataconfig;
@@ -45,4 +45,23 @@ class Migrate extends CliAction
         $this->cliresponse->out();
     }
 
+    public function resetMigration() {
+        try {
+            $filename = $this->request->getVarByPosition(0);
+        }
+        catch (\Exception $e) {
+            $filename = '';
+        }
+        $check = $this->migrationhandler->reset($filename);
+        if(is_array($check)) {
+            $this->cliresponse->setOutputMessage('Migrations reset');
+            foreach ($check as $idx => $m) {
+                $this->cliresponse->insertOutputData($idx, $m);
+            }
+        }
+        else {
+            $this->cliresponse->setOutputMessage('Error: migrations could not be reset: '.$check);
+        }
+        $this->cliresponse->out();
+    }
 }
