@@ -34,7 +34,7 @@ class Migration
         }
         $unapplied = [];
         foreach ($filelist as $file) {
-            if (strpos($file, '_applied') === false) {
+            if (strpos($file, '_applied') === false || strpos($file, '.git') === false) {
                 $unapplied[] = $file;
             }
         }
