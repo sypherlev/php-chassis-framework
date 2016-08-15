@@ -380,6 +380,15 @@ class Datasource
         return $this;
     }
 
+    /**
+     * Sets the order for the query
+     *
+     * @param $columnName_or_columnArray - has three possible types:
+     *     $column
+     *     array($columnone, $columntwo, ...)
+     *     array($tableone => array($columnone, $columntwo,  ...), $tabletwo => array(...), ...)
+     * @return $this
+     */
     public function orderBy($columnname_or_columnarray, $order = 'ASC')
     {
         $this->currentquery->order = [
@@ -759,11 +768,13 @@ class Datasource
     {
         if (is_array($this->currentquery->order['columns'])) {
             $preppedColumns = [];
-            foreach ($this->currentquery->order['columns'] as $tablename => $columnname) {
-                if ($this->hasStringKeys($this->currentquery->order['columns'])) {
-                    $preppedColumns[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname) . '`';
+            foreach ($this->currentquery->order['columns'] as $tablename => $columnname_or_columnarray) {
+                if ($this->hasStringKeys($this->currentquery->order['columns']) && is_array($columnname_or_columnarray)) {
+                    foreach ($columnname_or_columnarray as $columnname) {
+                        $preppedColumns[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname) . '`';
+                    }
                 } else {
-                    $preppedColumns[] = '`' . $this->currentquery->table . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname) . '`';
+                    $preppedColumns[] = '`' . $this->currentquery->table . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname_or_columnarray) . '`';
                 }
             }
             return 'ORDER BY '.implode(', ', $preppedColumns) . ' ' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->order['order']);
