@@ -74,13 +74,21 @@ class DataObject
      * @param $value
      * @return array|bool
      */
-    public function findMany($columnName, $value, $limit = 0) {
+    public function findMany($columnName, $value, $limit = 0, $orderby = '', $desc = false) {
         $this->source
             ->select()
             ->table($this->tablename)
             ->where([$columnName => $value]);
         if($limit > 0) {
             $this->source->limit($limit);
+        }
+        if($orderby != '') {
+            if($desc) {
+                $this->source->orderBy($orderby, 'DESC');
+            }
+            else {
+                $this->source->orderBy($orderby);
+            }
         }
         $querycopy = $this->source->cloneQuery();
         $result = $this->source->many();
