@@ -774,6 +774,12 @@ class Datasource
 
     private function checkOperand($variable, $param)
     {
+        if (strpos($variable, '!==') !== false) {
+            return '!==';
+        }
+        if (strpos($variable, '!=') !== false) {
+            return '!=';
+        }
         if (strpos($variable, '>=') !== false) {
             return '>=';
         }
@@ -804,6 +810,8 @@ class Datasource
         $variable = preg_replace('/ like$/', '', $variable);
         $variable = preg_replace('/ in$/', '', $variable);
         $variable = rtrim($variable, '>=');
+        $variable = rtrim($variable, '!==');
+        $variable = rtrim($variable, '!=');
         $variable = rtrim($variable, '<=');
         $variable = rtrim($variable, '>');
         $variable = rtrim($variable, '<');
