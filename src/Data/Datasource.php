@@ -803,8 +803,14 @@ class Datasource
         if (strpos($variable, '<') !== false) {
             return '<';
         }
+        if (strpos(strtolower($variable), ' not like') !== false) {
+            return 'NOT LIKE';
+        }
         if (strpos(strtolower($variable), ' like') !== false) {
             return 'LIKE';
+        }
+        if (strpos(strtolower($variable), ' not in') !== false) {
+            return 'NOT IN';
         }
         if (strpos(strtolower($variable), ' in') !== false) {
             return 'IN';
@@ -818,7 +824,9 @@ class Datasource
     private function stripOperands($variable)
     {
         $variable = strtolower($variable);
+        $variable = preg_replace('/ not like$/', '', $variable);
         $variable = preg_replace('/ like$/', '', $variable);
+        $variable = preg_replace('/ not in$/', '', $variable);
         $variable = preg_replace('/ in$/', '', $variable);
         $variable = rtrim($variable, '>=');
         $variable = rtrim($variable, '!==');
