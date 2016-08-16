@@ -653,6 +653,16 @@ class Datasource
                         $variable = $this->stripOperands($tablename_or_variable);
                         $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
                     }
+                    else if ($this->checkOperand($tablename_or_variable, $clause) == 'NOT IN') {
+                        $paramchunk = ' NOT IN (';
+                        foreach ($clause as $p) {
+                            $this->currentquery->wherevalues[] = $p;
+                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
+                        }
+                        $paramchunk = substr($paramchunk, 0, -2).')';
+                        $variable = $this->stripOperands($tablename_or_variable);
+                        $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
+                    }
                     else {
                         foreach ($clause as $variable => $param) {
                             if($param === null) {
@@ -661,6 +671,20 @@ class Datasource
                             else {
                                 if($this->checkOperand($variable, $param) == 'IN') {
                                     $paramchunk = ' IN (';
+                                    if(is_array($param)) {
+                                        foreach ($param as $p) {
+                                            $this->currentquery->wherevalues[] = $p;
+                                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
+                                        }
+                                    }
+                                    else {
+                                        $this->currentquery->wherevalues[] = $param;
+                                        $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1);
+                                    }
+                                    $paramchunk = substr($paramchunk, 0, -2).')';
+                                }
+                                else if ($this->checkOperand($variable, $param) == 'NOT IN') {
+                                    $paramchunk = ' NOT IN (';
                                     if(is_array($param)) {
                                         foreach ($param as $p) {
                                             $this->currentquery->wherevalues[] = $p;
@@ -834,7 +858,7 @@ class Datasource
         $variable = rtrim($variable, '<=');
         $variable = rtrim($variable, '>');
         $variable = rtrim($variable, '<');
-        return str_replace(' ', '', $variable);
+        return rtrim($variable, ' ');
     }
 
     private function compileColumnName($table, $columnName, $alias = '') {
