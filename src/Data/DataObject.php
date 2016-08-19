@@ -58,7 +58,7 @@ class DataObject
             ->where([$columnName => $value]);
         $querycopy = $this->source->cloneQuery();
         $result = $this->source->one();
-        if(!$result) {
+        if($result === false) {
             $this->throwSQlError($querycopy, 'one', 'Error retrieving single result from '.$this->tablename.', no result found');
             return false;
         }
@@ -92,8 +92,42 @@ class DataObject
         }
         $querycopy = $this->source->cloneQuery();
         $result = $this->source->many();
-        if(!$result) {
+        if($result === false) {
             $this->throwSQlError($querycopy, 'many', 'Unknown Error: retrieving multiple results from '.$this->tablename);
+            return false;
+        }
+        else {
+            return $result;
+        }
+    }
+
+    /**
+     * Gets any result at all that matches the where parameters
+     *
+     * @param $columnName
+     * @param $value
+     * @return array|bool
+     */
+    public function findAny($whereArray, $limit = 0, $orderby = '', $desc = false) {
+        $this->source
+            ->select()
+            ->table($this->tablename)
+            ->where($whereArray);
+        if($limit > 0) {
+            $this->source->limit($limit);
+        }
+        if($orderby != '') {
+            if($desc) {
+                $this->source->orderBy($orderby, 'DESC');
+            }
+            else {
+                $this->source->orderBy($orderby);
+            }
+        }
+        $querycopy = $this->source->cloneQuery();
+        $result = $this->source->many();
+        if($result === false) {
+            $this->throwSQlError($querycopy, 'many', 'Unknown Error: retrieving any results from '.$this->tablename);
             return false;
         }
         else {
@@ -108,13 +142,14 @@ class DataObject
      * @return bool
      */
     public function create(Array $entity) {
+        $this->source->startRecording();
         $this->source
             ->insert()
             ->add($entity)
             ->table($this->tablename);
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
-        if(!$check) {
+        if($check === false) {
             $this->throwSQlError($querycopy, 'execute', 'Unknown Error: inserting data to '.$this->tablename);
             return false;
         }
@@ -138,7 +173,7 @@ class DataObject
             ->table($this->tablename);
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
-        if(!$check) {
+        if($check === false) {
             $this->throwSQlError($querycopy, 'execute', 'Unknown Error: inserting batch to '.$this->tablename);
             return false;
         }
@@ -163,7 +198,7 @@ class DataObject
             ->where([$wherecolumnName => $wherevalue]);
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
-        if(!$check) {
+        if($check === false) {
             $this->throwSQlError($querycopy, 'execute', 'Unknown Error: updating records in '.$this->tablename);
             return false;
         }
@@ -185,7 +220,7 @@ class DataObject
             ->where([$columnName => $value]);
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
-        if(!$check) {
+        if($check === false) {
             $this->throwSQlError($querycopy, 'execute', 'Unknown Error: deleting a record from '.$this->tablename);
             return false;
         }
@@ -201,8 +236,8 @@ class DataObject
         $this->source->{$terminationMethod}();
         $this->source->stopRecording();
         $output = $this->source->getRecordedOutput();
-        if(isset($output[0]['error'][0]) && $output[0]['error'][0] != 00000) {
-            throw (new \Exception('DataObject SQL Error: '.$output[0]['error'][0]));
+        if(isset($output[0]['error'][2]) && $output[0]['error'][0] != 00000) {
+            throw (new \Exception('DataObject SQL Error: '.$output[0]['error'][2]));
         }
         else {
             throw (new \Exception('DataObject SQL '.$defaultMessage));
