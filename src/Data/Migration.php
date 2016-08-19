@@ -28,28 +28,32 @@ class Migration
     }
 
     public function reset($filename = '') {
-        $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations'), array('.', '..'));
+        $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . 'applied'), array('.', '..'));
         $reset = [];
         foreach ($filelist as $file) {
-            if($filename != '' && $file != $filename) {
+            $appliedfilename = str_replace('.sql', '_applied.sql', $file);
+            if($filename != '' && $file != $appliedfilename) {
                 continue;
             }
-            $filepath = '..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . $file;
-            $newfilepath = str_replace('_applied', '', $filepath);
-            rename($filepath, $newfilepath);
-            $reset[] = $newfilepath;
+            $filepath = '..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . 'applied' . DIRECTORY_SEPARATOR . $appliedfilename;
+            unlink($filepath);
+            $reset[] = $file;
         }
         return $reset;
     }
 
     public function migrate() {
         $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations'), array('.', '..'));
+        $applieddir = '..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . 'applied';
         if(empty($filelist)) {
             throw (new \Exception('No migration files found'));
         }
         $unapplied = [];
         foreach ($filelist as $file) {
-            if (strpos($file, '_applied') === false && strpos($file, '.git') === false) {
+            if (strpos($file, '.git') !== false) {
+                continue;
+            }
+            if(!file_exists($applieddir . DIRECTORY_SEPARATOR . $file)) {
                 $unapplied[] = $file;
             }
         }
@@ -66,8 +70,8 @@ class Migration
                     $completed[] = $file;
                     $exploded_filename = explode('.', $file);
                     $newfilename = $exploded_filename[0].'_applied.'.$exploded_filename[1];
-                    $newfilepath = str_replace($file, $newfilename, $filepath);
-                    rename($filepath, $newfilepath);
+                    $appliedfilename = $applieddir . DIRECTORY_SEPARATOR . $newfilename;
+                    copy($filepath, $appliedfilename);
                 }
             }
         }

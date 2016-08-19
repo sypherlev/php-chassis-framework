@@ -1,6 +1,5 @@
 /vendor
 .idea/
 app/tests/
-composer.lock
 .env
 /web/php_errors.log
