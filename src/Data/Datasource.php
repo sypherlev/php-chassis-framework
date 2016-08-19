@@ -37,10 +37,14 @@ class Datasource
     // TERMINATION METHODS
     // these methods are used to end the query chain and return a result
 
-    public function one()
+    public function one($sql = false, $binds = false)
     {
-        $sql = $this->generateStatement();
-        $binds = $this->getAllBindings();
+        if(!$sql) {
+            $sql = $this->generateStatement();
+        }
+        if(!$binds) {
+            $binds = $this->getAllBindings();
+        }
         try {
             $statement = $this->pdo->prepare($sql);
             if (count($binds) > 0) {
@@ -64,10 +68,14 @@ class Datasource
         return $return;
     }
 
-    public function many()
+    public function many($sql = false, $binds = false)
     {
-        $sql = $this->generateStatement();
-        $binds = $this->getAllBindings();
+        if(!$sql) {
+            $sql = $this->generateStatement();
+        }
+        if(!$binds) {
+            $binds = $this->getAllBindings();
+        }
         try {
             $statement = $this->pdo->prepare($sql);
             if (count($binds) > 0) {
@@ -103,10 +111,14 @@ class Datasource
         }
     }
 
-    public function execute()
+    public function execute($sql = false, $binds = false)
     {
-        $sql = $this->generateStatement();
-        $binds = $this->getAllBindings();
+        if(!$sql) {
+            $sql = $this->generateStatement();
+        }
+        if(!$binds) {
+            $binds = $this->getAllBindings();
+        }
         try {
             $statement = $this->pdo->prepare($sql);
             if (count($binds) > 0) {
@@ -186,6 +198,20 @@ class Datasource
     public function getSchemaName()
     {
         return $this->config->database;
+    }
+
+    /**
+     * Gets a plain PHP object which contains the query and bindings. This is useful if you
+     * want to execute the query elsewhere.
+     *
+     * @param string $method
+     * @return \stdClass
+     */
+    public function retrieveQuery() {
+        $query = new \stdClass();
+        $query->compiledquery = $this->getCurrentSQL();
+        $query->bindings = $this->getAllBindings();
+        return $query;
     }
 
     // does whatever it says
