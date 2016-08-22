@@ -355,7 +355,10 @@ class Query
                 $compilestring .= '(';
                 foreach ($columns as $column => $placeholder) {
                     $operand = $this->checkOperand($column, $placeholder);
-                    $compilestring .= '`'.$table.'`.`'.$this->stripOperands($column).'` '.$operand.' :'.$placeholder.' '.$whereentry->inner.' ';
+                    if($placeholder != 'NULL') {
+                        $placeholder = ':'.$placeholder;
+                    }
+                    $compilestring .= '`'.$table.'`.`'.$this->stripOperands($column).'` '.$operand.' '.$placeholder.' '.$whereentry->inner.' ';
                 }
                 $compilestring = rtrim($compilestring, ' '.$whereentry->inner.' ');
                 $compilestring .= ') '.$whereentry->outer.' ';
