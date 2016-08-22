@@ -61,7 +61,7 @@ class AuthData extends AbstractData
             ->select()
             ->columns(['user_roles' => ['user_role']])
             ->table('users')
-            ->join('user_roles', ['users' => 'id', 'user_roles' => 'user_id'], 'left')
+            ->join('users', 'user_roles', ['id' => 'user_id'], 'left')
             ->where(['authkey' => $authkey, 'authexpiry >' => time()])
             ->many();
         if($roles && count($roles) > 0) {
