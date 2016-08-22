@@ -573,6 +573,9 @@ class Query
 
     private function checkOperand($variable, $param)
     {
+        if($param == 'NULL' && strpos($variable, '!=') !== false) {
+            return 'IS NOT';
+        }
         if (strpos($variable, '!==') !== false) {
             return '!==';
         }
