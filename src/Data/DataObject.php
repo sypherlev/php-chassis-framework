@@ -145,8 +145,8 @@ class DataObject
         $this->source->startRecording();
         $this->source
             ->insert()
-            ->add($entity)
-            ->table($this->tablename);
+            ->table($this->tablename)
+            ->add($entity);
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
         if($check === false) {
@@ -165,12 +165,12 @@ class DataObject
      * @return bool
      */
     public function createBatch(Array $batch) {
-        foreach ($batch as $b) {
-            $this->source->add($b);
-        }
         $this->source
             ->insert()
             ->table($this->tablename);
+        foreach ($batch as $b) {
+            $this->source->add($b);
+        }
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
         if($check === false) {

@@ -13,12 +13,13 @@
 
 namespace Chassis\Data;
 
+use Chassis\Data\Assets\Query;
+
 class Datasource
 {
     private $config;
     private $pdo;
     private $currentquery;
-    private $SANITIZER_REGEX = '/[^A-Za-z0-9_]+/';
     private $recording = false;
     private $recording_output;
     private $in_transaction = false;
@@ -27,11 +28,7 @@ class Datasource
     {
         $this->config = $config;
         $this->pdo = $this->generateNewPDO();
-        if ($this->config->sanitizer_regex != '') {
-            $this->SANITIZER_REGEX = $this->config->sanitizer_regex;
-        }
-        $this->currentquery = new \stdClass();
-        $this->currentquery->count = false;
+        $this->currentquery = new Query();
     }
 
     // TERMINATION METHODS
@@ -101,7 +98,7 @@ class Datasource
 
     public function count()
     {
-        $this->currentquery->count = true;
+        $this->currentquery->setCount(true);
         $return = $this->one();
         if($return) {
             return $return->count;
@@ -189,8 +186,7 @@ class Datasource
     // clears the currently compiled query
     public function reset()
     {
-        $this->currentquery = new \stdClass();
-        $this->currentquery->count = false;
+        $this->currentquery = new Query();
         return $this;
     }
 
@@ -214,16 +210,49 @@ class Datasource
         return $query;
     }
 
-    // does whatever it says
+    /**
+     * Sets a whitelist for the columns in the case where the query is executing with
+     * user input as the column names
+     *
+     * @param array $whitelist
+     * @return $this
+     */
+    public function setColumnWhitelist(Array $whitelist) {
+        $this->currentquery->setColumnWhitelist($whitelist);
+        return $this;
+    }
 
+    /**
+     * Sets a whitelist for the tables in the case where the query is executing with
+     * user input as the table names. Applies to the primary table and all joined tables
+     *
+     * @param array $whitelist
+     * @return $this
+     */
+    public function setTableWhitelist(Array $whitelist) {
+        $this->currentquery->setTableWhitelist($whitelist);
+        return $this;
+    }
+
+    /**
+     * Shorthand method to get the last saved ID from a table. Allows for ID names other than 'id'
+     *
+     * @param $table
+     * @param string $primaryKeyname
+     * @return mixed
+     */
     public function lastIdFrom($table, $primaryKeyname = 'id')
     {
-        $table = preg_replace($this->SANITIZER_REGEX, '', $table);
-        $primaryKeyname = preg_replace($this->SANITIZER_REGEX, '', $primaryKeyname);
-        $record = $this->raw("
-            SELECT $primaryKeyname FROM $table ORDER BY id DESC LIMIT 1", [], 'fetch');
-        return $record->{$primaryKeyname};
+        $record = $this->select()->table($table)->columns($primaryKeyname)->orderBy($primaryKeyname, 'DESC')->one();
+        if(isset($record->{$primaryKeyname})) {
+            return $primaryKeyname;
+        }
+        else {
+            return false;
+        }
     }
+
+    // does whatever it says
 
     public function lastInsertId($name = null) {
         return $this->pdo->lastInsertId($name);
@@ -268,6 +297,7 @@ class Datasource
         $this->recording = true;
         $this->recording_output = [];
     }
+
     public function stopRecording() {
         $this->recording = false;
     }
@@ -279,7 +309,7 @@ class Datasource
     /**
      * Copies and returns the current query - useful for storing/rerunning failed queries
      *
-     * @return \stdClass $query
+     * @return Query $query
      */
     public function cloneQuery() {
         return clone $this->currentquery;
@@ -290,7 +320,7 @@ class Datasource
      *
      * @param $query
      */
-    public function setQuery($query) {
+    public function setQuery(Query $query) {
         $this->currentquery = $query;
     }
 
@@ -309,25 +339,25 @@ class Datasource
 
     public function select()
     {
-        $this->currentquery->type = 'SELECT';
+        $this->currentquery->setType('SELECT');
         return $this;
     }
 
     public function update()
     {
-        $this->currentquery->type = 'UPDATE';
+        $this->currentquery->setType('UPDATE');
         return $this;
     }
 
     public function insert()
     {
-        $this->currentquery->type = 'INSERT';
+        $this->currentquery->setType('INSERT');
         return $this;
     }
 
     public function delete()
     {
-        $this->currentquery->type = 'DELETE';
+        $this->currentquery->setType('DELETE');
         return $this;
     }
 
@@ -344,14 +374,7 @@ class Datasource
      */
     public function columns($columnname_or_columnarray)
     {
-        if(empty($this->currentquery->columns)) {
-            if (!is_array($columnname_or_columnarray)) {
-                $columns = array($columnname_or_columnarray);
-            } else {
-                $columns = $columnname_or_columnarray;
-            }
-            $this->currentquery->columns = $columns;
-        }
+        $this->currentquery->setColumns($columnname_or_columnarray);
         return $this;
     }
 
@@ -363,7 +386,7 @@ class Datasource
      */
     public function table($tablename)
     {
-        $this->currentquery->table = $tablename;
+        $this->currentquery->setTable($tablename);
         return $this;
     }
 
@@ -376,11 +399,7 @@ class Datasource
      */
     public function add(Array $record)
     {
-        if (!isset($this->currentquery->records)) {
-            $this->currentquery->records = [];
-        }
-        $this->columns(array_keys($record));
-        $this->currentquery->records[] = $record;
+        $this->currentquery->addInsertRecord($record);
         return $this;
     }
 
@@ -392,16 +411,17 @@ class Datasource
      */
     public function set(Array $set)
     {
-        $this->currentquery->set = $set;
+        $this->currentquery->setUpdates($set);
         return $this;
     }
 
-    public function limit($limit, $count = false)
+    public function limit($rows, $offset = false)
     {
-        if (!$count) {
-            $this->currentquery->limit = (int)$limit; // ALWAYS CAST TO INT, THIS IS NOT SANITIZED
-        } else {
-            $this->currentquery->limit = (int)$count . ',' . (int)$limit; // ALWAYS CAST TO INT, THIS IS NOT SANITIZED
+        if($offset !== false) {
+            $this->currentquery->setLimit($rows, $offset);
+        }
+        else {
+            $this->currentquery->setLimit($rows);
         }
         return $this;
     }
@@ -417,21 +437,16 @@ class Datasource
      */
     public function orderBy($columnname_or_columnarray, $order = 'ASC')
     {
-        $this->currentquery->order = [
-            'columns' => $columnname_or_columnarray,
-            'order' => $order
-        ];
+        if(!is_array($columnname_or_columnarray)) {
+            $columnname_or_columnarray = [$columnname_or_columnarray];
+        }
+        $this->currentquery->setOrderBy($columnname_or_columnarray, $order);
         return $this;
     }
 
     public function groupBy($columnname_or_columnarray)
     {
-        if (!is_array($columnname_or_columnarray)) {
-            $columns = array($columnname_or_columnarray);
-        } else {
-            $columns = $columnname_or_columnarray;
-        }
-        $this->currentquery->group = $columns;
+        $this->currentquery->setGroupBy($columnname_or_columnarray);
         return $this;
     }
 
@@ -441,21 +456,15 @@ class Datasource
     /**
      * Adds a JOIN clause
      *
-     * @param $jointable - tablename
-     * @param array $on - must be in the format array('tableone' => 'column, 'tabletwo' => 'column')
+     * @param $firsttable - tablename
+     * @param $secondtable - tablename
+     * @param array $on - must be in the format array('firsttablecolumn' => 'secondtablecolumn, ...)
      * @param string $type - inner|full|left|right
      * @return $this
      */
-    public function join($jointable, Array $on, $type = 'inner')
+    public function join($firsttable, $secondtable, Array $on, $type = 'inner')
     {
-        if (!isset($this->currentquery->joins)) {
-            $this->currentquery->joins = [];
-        }
-        $newJoin = new \stdClass();
-        $newJoin->table = $jointable;
-        $newJoin->on = $on;
-        $newJoin->type = $type;
-        $this->currentquery->joins[] = $newJoin;
+        $this->currentquery->setJoin($firsttable, $secondtable, $on, strtoupper($type));
         return $this;
     }
 
@@ -471,21 +480,13 @@ class Datasource
      * @param array $where - has three possible types:
      *     array($column => $param, ...)
      *     array($tableone => array($column => $param, ...), $tabletwo => array($column => $param, ...), ...)
-     *     array($tableone => array($column => $param, ...), $tabletwo => array($column => $param, ...), ...)
      * @param string $innercondition - AND|OR - used between clauses in the WHERE statement
      * @param string $outercondition - AND|OR - used to append this WHERE statement to the query
      * @return $this
      */
     public function where(Array $where, $innercondition = 'AND', $outercondition = 'AND')
     {
-        if (!isset($this->currentquery->wheres)) {
-            $this->currentquery->wheres = [];
-        }
-        $newWhere = new \stdClass();
-        $newWhere->clauses = $where;
-        $newWhere->inner = $innercondition;
-        $newWhere->outer = $outercondition;
-        $this->currentquery->wheres[] = $newWhere;
+        $this->currentquery->setWhere($where, $innercondition, $outercondition);
         return $this;
     }
 
@@ -499,412 +500,14 @@ class Datasource
         return new \PDO($dns, $this->config->user, $this->config->pass);
     }
 
-    private function hasStringKeys(Array $array)
-    {
-        foreach ($array as $key => $value) {
-            if (is_string($key)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // COMPILER METHODS
     private function generateStatement()
     {
-        if (!isset($this->currentquery->type)) {
-            throw new \Exception('Missing query type SELECT, UPDATE, INSERT, or DELETE: statement cannot be executed.');
-        }
-        if (!isset($this->currentquery->table)) {
-            throw new \Exception('Missing table name: statement cannot be executed.');
-        }
-        $generatefunction = 'generate' . $this->currentquery->type . 'Statement';
-        return $this->{$generatefunction}();
+        return $this->currentquery->compile();
     }
 
     private function getAllBindings()
     {
-        $bindings = [];
-        if (!empty($this->currentquery->wherevalues)) {
-            foreach ($this->currentquery->wherevalues as $idx => $param) {
-                $bindings[':wh' . $idx] = $param;
-            }
-        }
-        if (!empty($this->currentquery->setvalues)) {
-            foreach ($this->currentquery->setvalues as $idx => $param) {
-                $bindings[':se' . $idx] = $param;
-            }
-        }
-        if (!empty($this->currentquery->insertvalues)) {
-            foreach ($this->currentquery->insertvalues as $idx => $param) {
-                $bindings[':' . $idx] = $param;
-            }
-        }
-        return $bindings;
-    }
-
-    private function generateSELECTStatement()
-    {
-        $query = $this->currentquery->type . ' ';
-        if (!empty($this->currentquery->columns)) {
-            $query .= $this->addColumnNames() . ' ';
-        } else if ($this->currentquery->count) {
-            $query .= 'COUNT(*) AS count ';
-        } else {
-            $query .= '* ';
-        }
-        $query .= 'FROM `' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table) . '` ';
-        if (!empty($this->currentquery->joins)) {
-            $query .= $this->addJoins() . ' ';
-        }
-        if (!empty($this->currentquery->wheres)) {
-            $query .= $this->addWheres();
-        }
-        if (!empty($this->currentquery->group)) {
-            $query .= $this->addGroups() . ' ';
-        }
-        if (!empty($this->currentquery->order)) {
-            $query .= $this->addOrder() . ' ';
-        }
-        if (!empty($this->currentquery->limit)) {
-            $query .= 'LIMIT ' . $this->currentquery->limit;
-        }
-        return $query;
-    }
-
-    private function generateDELETEStatement()
-    {
-        $query = $this->currentquery->type . ' ';
-        $query .= 'FROM `' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table) . '` ';
-        if (!empty($this->currentquery->wheres)) {
-            $query .= $this->addWheres();
-        }
-        return $query;
-    }
-
-    private function generateINSERTStatement()
-    {
-        if (empty($this->currentquery->records)) {
-            throw new \Exception('No records added for INSERT: statement cannot be executed.');
-        }
-        $query = $this->currentquery->type . ' INTO ';
-        $query .= '`' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table) . '` ';
-        if (!empty($this->currentquery->columns)) {
-            $query .= '(' . $this->addColumnNames() . ') ';
-        }
-        $query .= 'VALUES ';
-        $query .= $this->addRecords();
-        return $query;
-    }
-
-    private function generateUPDATEStatement()
-    {
-        if (empty($this->currentquery->set)) {
-            throw new \Exception('No SET added for UPDATE: statement cannot be executed.');
-        }
-        $query = $this->currentquery->type . ' ';
-        $query .= '`' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table) . '` ';
-        $query .= 'SET ' . $this->addSet() . ' ';
-        if (!empty($this->currentquery->wheres)) {
-            $query .= $this->addWheres();
-        }
-        return $query;
-    }
-
-    private function addJoins()
-    {
-        $preppedjoins = [];
-        foreach ($this->currentquery->joins as $join) {
-            $thisjoin = '';
-            if (in_array(strtoupper($join->type), ['INNER', 'FULL', 'LEFT', 'RIGHT'])) {
-                $thisjoin .= strtoupper($join->type) . ' ';
-            }
-            $thisjoin .= 'JOIN ';
-            $thisjoin .= '`' . preg_replace($this->SANITIZER_REGEX, '', $join->table) . '` ON ';
-            $count = 0;
-            foreach ($join->on as $tablename => $column) {
-                $thisjoin .= '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $column) . '`';
-                if ($count == 0) {
-                    $thisjoin .= ' = ';
-                }
-                $count++;
-                if ($count > 1) {
-                    break;
-                }
-            }
-            $preppedjoins[] = $thisjoin;
-        }
-        return implode(' ', $preppedjoins);
-    }
-
-    private function addRecords()
-    {
-        if (!isset($this->currentquery->insertvalues)) {
-            $this->currentquery->insertvalues = [];
-        }
-        $preppedInserts = [];
-        foreach ($this->currentquery->records as $idx => $record) {
-            $insert = [];
-            foreach ($record as $column => $value) {
-                $this->currentquery->insertvalues[preg_replace($this->SANITIZER_REGEX, '', $column . $idx)] = $value;
-                $insert[] = ':' . preg_replace($this->SANITIZER_REGEX, '', $column . $idx);
-            }
-            $preppedInserts[] = '(' . implode(',', $insert) . ')';
-        }
-        return implode(',', $preppedInserts);
-    }
-
-    private function addWheres()
-    {
-        $preppedWheres = 'WHERE ';
-        $firstclause = true;
-        if (!isset($this->currentquery->wherevalues)) {
-            $this->currentquery->wherevalues = [];
-        }
-
-        foreach ($this->currentquery->wheres as $where) {
-            if (!$firstclause) {
-                $preppedWheres .= ' ' . preg_replace($this->SANITIZER_REGEX, '', $where->outer);
-            }
-            $preppedClauses = [];
-            foreach ($where->clauses as $tablename_or_variable => $clause) {
-                if (is_array($clause)) {
-                    if($this->checkOperand($tablename_or_variable, $clause) == 'IN') {
-                        $paramchunk = ' IN (';
-                        foreach ($clause as $p) {
-                            $this->currentquery->wherevalues[] = $p;
-                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
-                        }
-                        $paramchunk = substr($paramchunk, 0, -2).')';
-                        $variable = $this->stripOperands($tablename_or_variable);
-                        $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
-                    }
-                    else if ($this->checkOperand($tablename_or_variable, $clause) == 'NOT IN') {
-                        $paramchunk = ' NOT IN (';
-                        foreach ($clause as $p) {
-                            $this->currentquery->wherevalues[] = $p;
-                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
-                        }
-                        $paramchunk = substr($paramchunk, 0, -2).')';
-                        $variable = $this->stripOperands($tablename_or_variable);
-                        $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
-                    }
-                    else {
-                        foreach ($clause as $variable => $param) {
-                            if($param === null) {
-                                $paramchunk = $this->checkOperand($variable, $param) . ' NULL';
-                            }
-                            else {
-                                if($this->checkOperand($variable, $param) == 'IN') {
-                                    $paramchunk = ' IN (';
-                                    if(is_array($param)) {
-                                        foreach ($param as $p) {
-                                            $this->currentquery->wherevalues[] = $p;
-                                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
-                                        }
-                                    }
-                                    else {
-                                        $this->currentquery->wherevalues[] = $param;
-                                        $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1);
-                                    }
-                                    $paramchunk = substr($paramchunk, 0, -2).')';
-                                }
-                                else if ($this->checkOperand($variable, $param) == 'NOT IN') {
-                                    $paramchunk = ' NOT IN (';
-                                    if(is_array($param)) {
-                                        foreach ($param as $p) {
-                                            $this->currentquery->wherevalues[] = $p;
-                                            $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
-                                        }
-                                    }
-                                    else {
-                                        $this->currentquery->wherevalues[] = $param;
-                                        $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1);
-                                    }
-                                    $paramchunk = substr($paramchunk, 0, -2).')';
-                                }
-                                else {
-                                    $this->currentquery->wherevalues[] = $param;
-                                    $paramchunk = $this->checkOperand($variable, $param) . ' :wh' . (count($this->currentquery->wherevalues) - 1);
-                                }
-                            }
-                            $variable = $this->stripOperands($variable);
-                            $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename_or_variable) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` ' . $paramchunk;
-                        }
-                    }
-                } else {
-                    if($clause === null) {
-                        $paramchunk = $this->checkOperand($tablename_or_variable, $clause) . ' NULL';
-                    }
-                    else {
-                        if($this->checkOperand($tablename_or_variable, $clause) == 'IN') {
-                            $paramchunk = ' IN (';
-                            if(is_array($clause)) {
-                                foreach ($clause as $p) {
-                                    $this->currentquery->wherevalues[] = $p;
-                                    $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1).', ';
-                                }
-                            }
-                            else {
-                                $this->currentquery->wherevalues[] = $clause;
-                                $paramchunk .= ' :wh' . (count($this->currentquery->wherevalues) - 1);
-                            }
-                            $paramchunk = substr($paramchunk, 0, -2).')';
-                        }
-                        else {
-                            $this->currentquery->wherevalues[] = $clause;
-                            $paramchunk = $this->checkOperand($tablename_or_variable, $clause) . ' :wh' . (count($this->currentquery->wherevalues) - 1);
-                        }
-                    }
-                    $tablename_or_variable = $this->stripOperands($tablename_or_variable);
-                    $preppedClauses[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $tablename_or_variable) . '` ' . $paramchunk;
-                }
-            }
-            $preppedWheres .= '(' . implode(' ' . preg_replace($this->SANITIZER_REGEX, '', $where->inner) . ' ', $preppedClauses) . ') ';
-            $firstclause = false;
-        }
-        return $preppedWheres;
-    }
-
-    private function addSet()
-    {
-        $this->currentquery->setvalues = [];
-        $preppedSets = [];
-        foreach ($this->currentquery->set as $variable => $param) {
-            $this->currentquery->setvalues[] = $param;
-            $preppedSets[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $variable) . '` = :se' . (count($this->currentquery->setvalues) - 1);
-        }
-        return implode(', ', $preppedSets);
-    }
-
-    private function addColumnNames()
-    {
-        $preppednames = [];
-        foreach ($this->currentquery->columns as $alias_or_tablename => $column) {
-            if (is_array($column)) {
-                foreach ($column as $alias_or_columnname => $columnname) {
-                    if ($this->hasStringKeys($column)) {
-                        $preppednames[] = $this->compileColumnName($alias_or_tablename, $columnname, $alias_or_columnname);
-                    } else {
-                        $preppednames[] = $this->compileColumnName($alias_or_tablename, $columnname);
-                    }
-                }
-            } else {
-                if ($this->hasStringKeys($this->currentquery->columns)) {
-                    $preppednames[] = $this->compileColumnName($this->currentquery->table, $column, $alias_or_tablename);
-                }
-                else {
-                    $preppednames[] = $this->compileColumnName($this->currentquery->table, $column);
-                }
-            }
-        }
-        return implode(', ', $preppednames);
-    }
-
-    private function addGroups()
-    {
-        $preppedGroups = [];
-        foreach ($this->currentquery->group as $tablename => $columnname) {
-            if ($this->hasStringKeys($this->currentquery->group)) {
-                $preppedGroups[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname) . '`';
-            } else {
-                $preppedGroups[] = '`' . $this->currentquery->table . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname) . '`';
-            }
-        }
-        return 'GROUP BY '.implode(', ', $preppedGroups);
-    }
-
-    private function addOrder()
-    {
-        if (is_array($this->currentquery->order['columns'])) {
-            $preppedColumns = [];
-            foreach ($this->currentquery->order['columns'] as $tablename => $columnname_or_columnarray) {
-                if ($this->hasStringKeys($this->currentquery->order['columns']) && is_array($columnname_or_columnarray)) {
-                    foreach ($columnname_or_columnarray as $columnname) {
-                        $preppedColumns[] = '`' . preg_replace($this->SANITIZER_REGEX, '', $tablename) . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname) . '`';
-                    }
-                } else {
-                    $preppedColumns[] = '`' . $this->currentquery->table . '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnname_or_columnarray) . '`';
-                }
-            }
-            return 'ORDER BY '.implode(', ', $preppedColumns) . ' ' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->order['order']);
-        } else {
-            return 'ORDER BY `'.preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->table).'`.`'.preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->order['columns']) . '` ' . preg_replace($this->SANITIZER_REGEX, '', $this->currentquery->order['order']);
-        }
-    }
-
-    private function checkOperand($variable, $param)
-    {
-        if (strpos($variable, '!==') !== false) {
-            return '!==';
-        }
-        if (strpos($variable, '!=') !== false) {
-            return '!=';
-        }
-        if (strpos($variable, '>=') !== false) {
-            return '>=';
-        }
-        if (strpos($variable, '<=') !== false) {
-            return '<=';
-        }
-        if (strpos($variable, '>') !== false) {
-            return '>';
-        }
-        if (strpos($variable, '<') !== false) {
-            return '<';
-        }
-        if (strpos(strtolower($variable), ' not like') !== false) {
-            return 'NOT LIKE';
-        }
-        if (strpos(strtolower($variable), ' like') !== false) {
-            return 'LIKE';
-        }
-        if (strpos(strtolower($variable), ' not in') !== false) {
-            return 'NOT IN';
-        }
-        if (strpos(strtolower($variable), ' in') !== false) {
-            return 'IN';
-        }
-        if($param === null) {
-            return 'IS';
-        }
-        return '=';
-    }
-
-    private function stripOperands($variable)
-    {
-        $variable = strtolower($variable);
-        $variable = preg_replace('/ not like$/', '', $variable);
-        $variable = preg_replace('/ like$/', '', $variable);
-        $variable = preg_replace('/ not in$/', '', $variable);
-        $variable = preg_replace('/ in$/', '', $variable);
-        $variable = rtrim($variable, '>=');
-        $variable = rtrim($variable, '!==');
-        $variable = rtrim($variable, '!=');
-        $variable = rtrim($variable, '<=');
-        $variable = rtrim($variable, '>');
-        $variable = rtrim($variable, '<');
-        return rtrim($variable, ' ');
-    }
-
-    private function compileColumnName($table, $columnName, $alias = '') {
-        $table = preg_replace($this->SANITIZER_REGEX, '', $table);
-        if(strpos(strtolower($columnName), 'count(') !== false) {
-            $realcolumnname = str_replace('count(', '', $columnName);
-            $realcolumnname = str_replace('COUNT(', '', $realcolumnname);
-            $realcolumnname = rtrim($realcolumnname, ')');
-            $compiledColumnName = 'COUNT(`' .$table. '`.`' . preg_replace($this->SANITIZER_REGEX, '', $realcolumnname). '`)';
-        }
-        else if($columnName == '*') {
-            $compiledColumnName = '`' .$table. '`.*';
-        }
-        else {
-            $compiledColumnName = '`' .$table. '`.`' . preg_replace($this->SANITIZER_REGEX, '', $columnName). '`';
-        }
-        if($alias != '' && $columnName != '*') {
-            $compiledColumnName .= ' AS `' . preg_replace($this->SANITIZER_REGEX, '', $alias) . '`';
-        }
-        return $compiledColumnName;
+        return $this->currentquery->getBindings();
     }
 
     private function bindByType(\PDOStatement &$statement, $param, $value) {
