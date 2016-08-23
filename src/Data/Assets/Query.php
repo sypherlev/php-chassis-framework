@@ -532,7 +532,15 @@ class Query
         }
         foreach ($paramArray as $table => $columns) {
             foreach ($columns as $column => $param) {
-                if($param != null) {
+                if(strpos($column, ' IN') !== false && is_array($param)) {
+                    $paramstring = '(';
+                    foreach ($param as $in) {
+                        $paramstring .= $this->newBindEntry($in).', ';
+                    }
+                    $paramstring = rtrim($paramstring, ', ').')';
+                    $paramArray[$table][$column] = $paramstring;
+                }
+                else if($param !== null) {
                     $paramArray[$table][$column] = $this->newBindEntry($param);
                 }
                 else {
