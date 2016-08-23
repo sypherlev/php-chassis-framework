@@ -50,7 +50,7 @@ class Migration
         }
         $unapplied = [];
         foreach ($filelist as $file) {
-            if (strpos($file, '.git') !== false) {
+            if (strpos($file, '.git') !== false || strpos($file, 'applied') !== false) {
                 continue;
             }
             if(!file_exists($applieddir . DIRECTORY_SEPARATOR . $file)) {
@@ -68,9 +68,7 @@ class Migration
                 }
                 else {
                     $completed[] = $file;
-                    $exploded_filename = explode('.', $file);
-                    $newfilename = $exploded_filename[0].'_applied.'.$exploded_filename[1];
-                    $appliedfilename = $applieddir . DIRECTORY_SEPARATOR . $newfilename;
+                    $appliedfilename = $applieddir . DIRECTORY_SEPARATOR . $file;
                     copy($filepath, $appliedfilename);
                 }
             }
