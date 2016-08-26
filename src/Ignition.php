@@ -31,6 +31,12 @@ class Ignition
 
         } else {
             // Not in cli-mode; divert to the router
+            // initial check for whether to redirect to secure page
+            if(isset($_ENV['alwaysssl']) && $_ENV['alwaysssl'] === 'true' && !$this->isSecure()) {
+                $secureredirect = "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+                header("Location: $secureredirect");
+                exit;
+            }
             include(__DIR__ . '/../app/RouteCollection.php');
             $routecollection = $_ENV['app_namespace'] . 'RouteCollection';
             $router = new $routecollection();
@@ -65,5 +71,16 @@ class Ignition
                 $this->action->execute();
             }
         }
+    }
+
+    private function isSecure() {
+        $isSecure = false;
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
+            $isSecure = true;
+        }
+        elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
+            $isSecure = true;
+        }
+        return $isSecure;
     }
 }
