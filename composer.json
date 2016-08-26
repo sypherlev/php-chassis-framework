@@ -1,6 +1,6 @@
 {
   "description": "Chassis 1.0",
-  "name": "sypherlev/chassis-framework",
+  "name": "sypherlev/php-chassis-framework",
   "type": "project",
   "homepage": "https://github.com/sypherlev",
   "license": "MIT",
