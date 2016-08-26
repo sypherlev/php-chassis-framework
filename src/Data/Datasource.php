@@ -200,7 +200,6 @@ class Datasource
      * Gets a plain PHP object which contains the query and bindings. This is useful if you
      * want to execute the query elsewhere.
      *
-     * @param string $method
      * @return \stdClass
      */
     public function retrieveQuery() {
@@ -243,9 +242,9 @@ class Datasource
      */
     public function lastIdFrom($table, $primaryKeyname = 'id')
     {
-        $record = $this->select()->table($table)->columns($primaryKeyname)->orderBy($primaryKeyname, 'DESC')->one();
+        $record = $this->select()->table($table)->columns([$primaryKeyname])->orderBy($primaryKeyname, 'DESC')->one();
         if(isset($record->{$primaryKeyname})) {
-            return $primaryKeyname;
+            return $record->{$primaryKeyname};
         }
         else {
             return false;
@@ -435,12 +434,12 @@ class Datasource
      *     array($tableone => array($columnone, $columntwo,  ...), $tabletwo => array(...), ...)
      * @return $this
      */
-    public function orderBy($columnname_or_columnarray, $order = 'ASC')
+    public function orderBy($columnname_or_columnarray, $order = 'ASC', $useAliases = false)
     {
         if(!is_array($columnname_or_columnarray)) {
             $columnname_or_columnarray = [$columnname_or_columnarray];
         }
-        $this->currentquery->setOrderBy($columnname_or_columnarray, $order);
+        $this->currentquery->setOrderBy($columnname_or_columnarray, $order, $useAliases = false);
         return $this;
     }
 

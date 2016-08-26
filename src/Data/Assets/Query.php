@@ -220,14 +220,21 @@ class Query
             throw (new \Exception('You must set the primary table before setting the where clause'));
         }
         foreach ($where as $key => $value) {
-            if (is_array($value)) {
+            if (is_array($value) && strpos($key, ' IN') === false) {
                 // then this is an array of table => [column => param, ...]
-                if ($this->hasNumericKeys($value)) {
+                if ($this->hasNumericKeys($value) && strpos($key, ' IN') === false) {
                     throw (new \Exception('Bad where relations array: array must have string keys in the format column => param or table => [column => param]'));
                 }
                 $this->newWhereEntry($where, $innercondition, $outercondition);
                 break;
-            } else {
+            }
+            else if(is_array($value) && strpos($key, ' IN') !== false) {
+                // then this is an IN or NOT IN array
+                $where = [$this->table => $where];
+                $this->newWhereEntry($where, $innercondition, $outercondition);
+                break;
+            }
+            else {
                 if ($this->hasNumericKeys($where)) {
                     throw (new \Exception('Bad where relations array: array must have string keys in the format column => param or table => [column => param]'));
                 }
@@ -238,7 +245,7 @@ class Query
         }
     }
 
-    public function setOrderBy(Array $orderby, $aliases = false, $direction = 'ASC')
+    public function setOrderBy(Array $orderby, $direction = 'ASC', $aliases = false)
     {
         if (!$this->table) {
             throw (new \Exception('You must set the primary table before setting the order clause'));
@@ -248,11 +255,22 @@ class Query
         }
         if (!$this->hasNumericKeys($orderby)) {
             // then this is an array of tables
-            foreach ($orderby as $table => $col) {
-                if (is_string($col)) {
-                    $this->newOrderEntry($col, $table);
-                } else {
-                    throw (new \Exception('Invalid non-string column name in ORDER BY clause'));
+            foreach ($orderby as $table => $cols) {
+                if(is_array($cols)) {
+                    foreach ($cols as $col) {
+                        if (is_string($col)) {
+                            $this->newOrderEntry($col, $table);
+                        } else {
+                            throw (new \Exception('Invalid non-string column name in ORDER BY clause'));
+                        }
+                    }
+                }
+                else {
+                    if (is_string($cols)) {
+                        $this->newOrderEntry($cols, $table);
+                    } else {
+                        throw (new \Exception('Invalid non-string column name in ORDER BY clause'));
+                    }
                 }
             }
         } else {
@@ -355,9 +373,6 @@ class Query
                 $compilestring .= '(';
                 foreach ($columns as $column => $placeholder) {
                     $operand = $this->checkOperand($column, $placeholder);
-                    if($placeholder != 'NULL') {
-                        $placeholder = ':'.$placeholder;
-                    }
                     $compilestring .= '`'.$table.'`.`'.$this->stripOperands($column).'` '.$operand.' '.$placeholder.' '.$whereentry->inner.' ';
                 }
                 $compilestring = rtrim($compilestring, ' '.$whereentry->inner.' ');
@@ -396,7 +411,7 @@ class Query
         foreach ($this->records as $record) {
             $compilestring .= '(';
             foreach ($record as $column => $placeholder) {
-                $compilestring .= ':'.$placeholder.', ';
+                $compilestring .= $placeholder.', ';
             }
             $compilestring = rtrim($compilestring, ', ').'), ';
         }
@@ -406,7 +421,7 @@ class Query
     private function compileUpdates() {
         $compilestring = '';
         foreach ($this->updates as $updateentry) {
-            $compilestring .= '`'.$updateentry->column.'` = :'.$updateentry->param.', ';
+            $compilestring .= '`'.$updateentry->column.'` = '.$updateentry->param.', ';
         }
         return rtrim($compilestring, ', ').' ';
     }
@@ -431,7 +446,7 @@ class Query
         }
         $newupdate = new \stdClass();
         $newupdate->column = $column;
-        $newupdate->param = $this->newBindEntry($param, 'up');
+        $newupdate->param = $this->newBindEntry($param, ':up');
         $this->updates[] = $newupdate;
     }
 
@@ -517,6 +532,7 @@ class Query
         if (!empty($this->columnwhitelist)) {
             foreach ($paramArray as $table => $columns) {
                 foreach ($columns as $column => $param) {
+                    $column = $this->stripOperands($column);
                     if (!in_array($column, $this->columnwhitelist)) {
                         throw (new \Exception('Column in WHERE not found in white list'));
                     }
@@ -565,12 +581,12 @@ class Query
             }
         }
         foreach ($record as $column => $param) {
-            $record[$column] = $this->newBindEntry($param, 'ins');
+            $record[$column] = $this->newBindEntry($param, ':ins');
         }
         $this->records[] = $record;
     }
 
-    private function newBindEntry($param, $type = 'wh') {
+    private function newBindEntry($param, $type = ':wh') {
         if(!isset($this->bindings[$type])) {
             $this->bindings[$type] = [];
         }
