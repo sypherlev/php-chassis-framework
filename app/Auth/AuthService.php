@@ -26,19 +26,22 @@ class AuthService
         return false;
     }
     
-    public function create($newuser) {
-        $passhash = password_hash($newuser['password'], PASSWORD_DEFAULT);
+    public function bootstrapAdmin() {
+        $passhash = password_hash('chassis', PASSWORD_DEFAULT);
         $authkeyhash = time().'.'.uniqid('ap_', true);
+        $cookietoken = time().'.'.uniqid('con_', true);
         $user = array(
-            'username' => $newuser['email'],
+            'username' => 'admin',
             'password' => $passhash,
             'authkey' => $authkeyhash,
-            'email' => $newuser['email'],
+            'authexpiry' => time(),
+            'email' => 'admin@admin.admin',
             'created_on' => time(),
             'last_login' => '',
             'active' => 1,
             'first_name' => 'Admin',
-            'last_name' => 'Admin'
+            'last_name' => 'Admin',
+            'cookietoken' => $cookietoken
         );
         $check = $this->usersource->createUser($user);
         return $check;
