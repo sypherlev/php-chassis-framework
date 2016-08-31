@@ -8,18 +8,31 @@ class Migration
     private $dbpass;
     private $db;
     private $dbhost;
+    private $source;
 
     public function __construct(Dataconfig $config) {
+        $this->source = new Datasource($config);
         $this->dbuser = $config->user;
         $this->dbpass = $config->pass;
         $this->db = $config->database;
         $this->dbhost = $config->host;
     }
 
-    public function create() {
-        $filename = '..'. DIRECTORY_SEPARATOR .'migrations'. DIRECTORY_SEPARATOR . time().'.sql';
-        touch($filename);
-        if(file_exists($filename)) {
+    public function create($migrationname) {
+        $filename = time().'_'.preg_replace("/[^a-zA-Z0-9]/", "", $migrationname).'.sql';
+        $filepath = '..'. DIRECTORY_SEPARATOR .'migrations'. DIRECTORY_SEPARATOR . $filename;
+        touch($filepath);
+        if(file_exists($filepath)) {
+            $newmigration = [
+                'filename' => $filename,
+                'status' => 0,
+                'last_update' => time()
+            ];
+            $this->source
+                ->insert()
+                ->table('migrations')
+                ->add($newmigration)
+                ->execute();
             return $filename;
         }
         else {
@@ -27,53 +40,58 @@ class Migration
         }
     }
 
-    public function reset($filename = '') {
-        $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . 'applied'), array('.', '..'));
-        $reset = [];
-        foreach ($filelist as $file) {
-            $appliedfilename = str_replace('.sql', '_applied.sql', $file);
-            if($filename != '' && $file != $appliedfilename) {
-                continue;
-            }
-            $filepath = '..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . 'applied' . DIRECTORY_SEPARATOR . $appliedfilename;
-            unlink($filepath);
-            $reset[] = $file;
-        }
-        return $reset;
-    }
-
     public function migrate() {
-        $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations'), array('.', '..'));
-        $applieddir = '..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . 'applied';
-        if(empty($filelist)) {
-            throw (new \Exception('No migration files found'));
-        }
-        $unapplied = [];
-        foreach ($filelist as $file) {
-            if (strpos($file, '.git') !== false || strpos($file, 'applied') !== false) {
-                continue;
-            }
-            if(!file_exists($applieddir . DIRECTORY_SEPARATOR . $file)) {
-                $unapplied[] = $file;
-            }
-        }
-        natsort($unapplied);
-        $completed = [];
-        foreach ($unapplied as $file) {
-            $filepath = '..' . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . $file;
+        $results = [];
+        $migrations = $this->source
+            ->select()
+            ->table('migrations')
+            ->where(['status' => 0])
+            ->orderBy('last_update')
+            ->many();
+        foreach ($migrations as $m) {
+            $thisdir = '..' . DIRECTORY_SEPARATOR . 'migrations'. DIRECTORY_SEPARATOR;
+            $filepath = $thisdir.$m->filename;
             if(file_exists($filepath)) {
-                $check = $this->runSQLFile($filepath);
-                if(strpos($check, 'ERROR ') !== false) {
-                    return $check;
+                $check = $this->runMigration($filepath);
+                if($check !== true) {
+                    $results[] = [
+                        'file' => $m->filename,
+                        'output' => "Migration halt on the following output: \n".$check
+                    ];
+                    return $results;
                 }
                 else {
-                    $completed[] = $file;
-                    $appliedfilename = $applieddir . DIRECTORY_SEPARATOR . $file;
-                    copy($filepath, $appliedfilename);
+                    $this->source
+                        ->update()
+                        ->table('migrations')
+                        ->where(['id' => $m->id])
+                        ->set(['status' => 1])
+                        ->execute();
+                    $results[] = [
+                        'file' => $m->filename,
+                        'output' => "No errors found"
+                    ];
                 }
             }
+            else {
+                $results[] = [
+                    'file' => $m->filename,
+                    'output' => "Migration halt on missing file: \n".$m->filename
+                ];
+                return $results;
+            }
         }
-        return $completed;
+        return $results;
+    }
+
+    private function runMigration($filename) {
+        $output = $this->runSQLFile($filename);
+        if(strlen($output) > 0) { // then something happened, check back
+            return $output;
+        }
+        else { // then it executed without errors
+            return true;
+        }
     }
 
     // props to StackOverflow for this solution:

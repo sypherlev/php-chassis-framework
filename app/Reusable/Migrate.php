@@ -20,13 +20,37 @@ class Migrate extends CliAction
         $this->cliresponse = new CliResponse();
     }
 
+    public function bootstrap() {
+        try {
+            $check = $this->migrationhandler->bootstrap($this->request->getVarByPosition(0));
+        }
+        catch (\Exception $e) {
+            $check = false;
+        }
+        if($check) {
+            $this->cliresponse->setOutputMessage('Bootstrap output');
+            foreach ($check as $idx => $m) {
+                $this->cliresponse->insertOutputData($idx, $m);
+            }
+        }
+        else {
+            $this->cliresponse->setOutputMessage('Error: bootstrap failure, no filename specified');
+        }
+        $this->cliresponse->out();
+    }
+
     public function createMigration() {
-        $check = $this->migrationhandler->create();
+        try {
+            $check = $this->migrationhandler->create($this->request->getVarByPosition(0));
+        }
+        catch (\Exception $e) {
+            $check = false;
+        }
         if($check) {
             $this->cliresponse->setOutputMessage('Migration created: '.$check);
         }
         else {
-            $this->cliresponse->setOutputMessage('Error: migration could not be created');
+            $this->cliresponse->setOutputMessage('Error: migration could not be created, no filename specificed');
         }
         $this->cliresponse->out();
     }
@@ -34,33 +58,13 @@ class Migrate extends CliAction
     public function migrateUnapplied() {
         $check = $this->migrationhandler->migrate();
         if(is_array($check)) {
-            $this->cliresponse->setOutputMessage('Migrations applied');
+            $this->cliresponse->setOutputMessage('Migration Result');
             foreach ($check as $idx => $m) {
                 $this->cliresponse->insertOutputData($idx, $m);
             }
         }
         else {
             $this->cliresponse->setOutputMessage('Error: migrations could not be completed: '.$check);
-        }
-        $this->cliresponse->out();
-    }
-
-    public function resetMigration() {
-        try {
-            $filename = $this->request->getVarByPosition(0);
-        }
-        catch (\Exception $e) {
-            $filename = '';
-        }
-        $check = $this->migrationhandler->reset($filename);
-        if(is_array($check)) {
-            $this->cliresponse->setOutputMessage('Migrations reset');
-            foreach ($check as $idx => $m) {
-                $this->cliresponse->insertOutputData($idx, $m);
-            }
-        }
-        else {
-            $this->cliresponse->setOutputMessage('Error: migrations could not be reset: '.$check);
         }
         $this->cliresponse->out();
     }
