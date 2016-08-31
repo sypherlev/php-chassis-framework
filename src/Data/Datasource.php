@@ -152,12 +152,14 @@ class Datasource
      * @param int $returntype - defaults to PDO::FETCH_OBJ, must be a PDO return type
      * @return array|bool|\Exception|mixed
      */
-    public function raw($sql, $values, $fetch = '', $returntype = \PDO::FETCH_OBJ)
+    public function raw($sql, $values = [], $fetch = '', $returntype = \PDO::FETCH_OBJ)
     {
         try {
             $statement = $this->pdo->prepare($sql);
-            foreach ($values as $idx => $val) {
-                $this->bindByType($statement, $idx, $val);
+            if(!empty($values)) {
+                foreach ($values as $idx => $val) {
+                    $this->bindByType($statement, $idx, $val);
+                }
             }
             $return = $statement->execute();
             if ($fetch != '' && $return) {
