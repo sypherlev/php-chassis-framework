@@ -40,7 +40,43 @@ class Migration
         }
     }
 
+    public function bootstrap($filename) {
+        $thisdir = '..' . DIRECTORY_SEPARATOR . 'migrations'. DIRECTORY_SEPARATOR;
+        $filepath = $thisdir.$filename;
+        if(file_exists($filepath)) {
+            $check = $this->runMigration($filepath);
+            if ($check !== true) {
+                $results[] = [
+                    'file' => $filename,
+                    'output' => "Migration halt on the following output: \n" . $check
+                ];
+                return $results;
+            }
+            else {
+                $newmigration = [
+                    'filename' => $filename,
+                    'status' => 1,
+                    'last_update' => time()
+                ];
+                $this->source
+                    ->insert()
+                    ->table('migrations')
+                    ->add($newmigration)
+                    ->execute();
+                $results[] = [
+                    'file' => $filename,
+                    'output' => "Bootstrap complete"
+                ];
+                return $results;
+            }
+        }
+        else {
+            return false;
+        }
+    }
+
     public function migrate() {
+        $this->checkNew();
         $results = [];
         $migrations = $this->source
             ->select()
@@ -82,6 +118,30 @@ class Migration
             }
         }
         return $results;
+    }
+
+    private function checkNew() {
+        $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations'), array('.', '..'));
+        foreach ($filelist as $file) {
+            $check = $this->source
+                ->select()
+                ->table('migrations')
+                ->where(['filename' => $file])
+                ->one();
+            if(!$check) {
+                // then this is a new migration, add it to the database
+                $newmigration = [
+                    'filename' => $file,
+                    'status' => 0,
+                    'last_update' => time()
+                ];
+                $this->source
+                    ->insert()
+                    ->table('migrations')
+                    ->add($newmigration)
+                    ->execute();
+            }
+        }
     }
 
     private function runMigration($filename) {
