@@ -8,8 +8,6 @@ use Chassis\Request\WebRequest;
 class AuthAction extends WebAction
 {
     private $authservice;
-
-    private $request;
     private $responder;
 
     public function __construct(WebRequest $request)
@@ -17,10 +15,9 @@ class AuthAction extends WebAction
         parent::__construct($request);
         $this->authservice = new AuthService();
         $this->responder = new AuthResponder();
-        $this->request = $request;
     }
 
-    public function signin() {
+    public function login() {
         $user = $this->authservice->login($this->request->getBodyVar('username'), $this->request->getBodyVar('password'));
         $this->responder->signin($user);
     }

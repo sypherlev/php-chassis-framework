@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `user_roles` (
   UNIQUE KEY `idx_u` (`user_id`,`user_role`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `peereffects`.`migrations` (
+CREATE TABLE IF NOT EXISTS `migrations` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `filename` VARCHAR(500) NOT NULL,
   `status` INT NOT NULL DEFAULT 0,

@@ -37,7 +37,6 @@ class Ignition
                 header("Location: $secureredirect");
                 exit;
             }
-            include(__DIR__ . '/../app/RouteCollection.php');
             $routecollection = $_ENV['app_namespace'] . 'RouteCollection';
             $router = new $routecollection();
             $router->readyDispatcher();

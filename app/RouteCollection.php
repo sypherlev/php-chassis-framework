@@ -12,8 +12,8 @@ class RouteCollection extends Router
     {
         // ADD ALL YOUR ROUTES HERE
         $this->addRoute('GET', '/', 'MyApp\\Index\\IndexAction:index');
-        $this->addRoute('GET', '/auth/login', 'MyApp\\Auth\\AuthAction:login');
-        $this->addRoute('GET', '/auth/create', 'MyApp\\Auth\\AuthAction:create');
+        $this->addRoute('POST', '/auth/login', 'MyApp\\Auth\\AuthAction:login');
+        $this->addRoute('POST', '/auth/create', 'MyApp\\Auth\\AuthAction:create');
 
         // AUTH TESTING
         $this->addRoute('GET', '/secure/test', 'MyApp\\Secure\\SecureAction:isAllowed');
