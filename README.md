@@ -28,8 +28,10 @@ The /web folder has all the front-end goodness, like your JS and CSS assets, and
 * Open your .env file.
 * Change the APP_NAME to whatever.
 * Change the APP_NAMESPACE to match the PS-4 autoload for the /app folder in composer.json. This is super important because it makes everything go.
+* Open the RouteCollection.php class in /app.
+* Change its namespace to match the PS-4 autoload etc etc.
 * **Seriously, do NOT forget this or none of the routing will work.**
-* If you're feeling silly, you can leave them both at 'MyApp\\\\'.
+* If you're feeling silly, you can leave them all at 'MyApp\\\\'.
 
 ## Your first route
 
