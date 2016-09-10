@@ -3,10 +3,8 @@
  * Class Datasource
  *
  * MySQL Query builder for optimized use of multiple databasees and/or dynamic queries (table and column
- * names not known ahead of time). Accepts a Dataconfig object (wrapper around plain PHP object with config settings).
- * Designed to cover 90% of use cases in the compiler, with the last 10% covered by $this->raw()
- *
- * All column and table names are sanitized using $this->SANITIZER_REGEX
+ * names not known ahead of time) through whitelisting. Accepts a Dataconfig object (wrapper around plain PHP object with config settings).
+ * Designed to cover 90% of use cases, with the last 10% covered by $this->raw().
  *
  * @package Chassis\Data
  */
