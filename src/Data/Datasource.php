@@ -447,9 +447,6 @@ class Datasource
         return $this;
     }
 
-    // COMPILER NON-CHAIN METHODS
-    // these are separated to allow for more complex queries
-
     /**
      * Adds a JOIN clause
      *
