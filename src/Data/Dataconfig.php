@@ -1,4 +1,12 @@
 <?php
+/**
+ * Class Dataconfig
+ *
+ * Generic "let's store the database config" class. Designed to get params from the Chassis framework; kept separate
+ * in case I ever need to shove the Datasource into another project.
+ *
+ * @package Chassis\Data
+ */
 
 namespace Chassis\Data;
 
@@ -9,7 +17,6 @@ class Dataconfig
     public $database;
     public $user;
     public $pass;
-    public $sanitizer_regex = '';
     
     public function __construct($identifier) {
         $this->engine = isset($_ENV[$identifier.'_engine']) ? $_ENV[$identifier.'_engine'] : '';
@@ -17,7 +24,6 @@ class Dataconfig
         $this->database = isset($_ENV[$identifier.'_dbname']) ? $_ENV[$identifier.'_dbname'] : '';
         $this->user = isset($_ENV[$identifier.'_username']) ? $_ENV[$identifier.'_username'] : '';
         $this->pass = isset($_ENV[$identifier.'_password']) ? $_ENV[$identifier.'_password'] : '';
-        $this->sanitizer_regex = isset($_ENV[$identifier.'_sanitizer_regex']) ? $_ENV[$identifier.'_sanitizer_regex'] : '';
         if(!$this->validateConfig()) {
             throw new \Exception('Missing config parameters in Datasource');
         }
