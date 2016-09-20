@@ -1,21 +1,18 @@
 <?php
 /**
- * Class Datasource
+ * Class MySqlSource
  *
- * MySQL Query builder for optimized use of multiple databasees and/or dynamic queries (table and column
- * names not known ahead of time). Accepts a Dataconfig object (wrapper around plain PHP object with config settings).
- * Designed to cover 90% of use cases in the compiler, with the last 10% covered by $this->raw()
- *
- * All column and table names are sanitized using $this->SANITIZER_REGEX
- *
- * @package Chassis\Data
+ * MySQL compiler for optimized use of multiple databasees and/or dynamic queries (table and column
+ * names not known ahead of time) using whitelists. Designed to cover 90% of use cases,
+ * with the last 10% covered by $this->raw().
  */
 
-namespace Chassis\Data;
+namespace SypherLev\Blueprint\QueryBuilders\MySql;
 
-use Chassis\Data\Assets\Query;
+use SypherLev\Blueprint\QueryBuilders\SourceInterface;
+use SypherLev\Blueprint\QueryBuilders\QueryInterface;
 
-class Datasource
+class MySqlSource implements SourceInterface
 {
     private $config;
     private $pdo;
@@ -24,15 +21,14 @@ class Datasource
     private $recording_output;
     private $in_transaction = false;
 
-    public function __construct(Dataconfig $config)
+    public function __construct(\PDO $pdo)
     {
-        $this->config = $config;
-        $this->pdo = $this->generateNewPDO();
-        $this->currentquery = new Query();
+        $this->pdo = $pdo;
+        $this->currentquery = new MySqlQuery();
     }
 
     // TERMINATION METHODS
-    // these methods are used to end the query chain and return a result
+    // these methods are used to end the query chain, clear the query, and return a result
 
     public function one($sql = false, $binds = false)
     {
@@ -181,6 +177,12 @@ class Datasource
         }
     }
 
+    public function pattern() {
+        $current = $this->currentquery;
+        $this->reset();
+        return $current;
+    }
+
     // UTILITY FUNCTIONS
 
     // clears the currently compiled query
@@ -314,7 +316,7 @@ class Datasource
     /**
      * Copies and returns the current query - useful for storing/rerunning failed queries
      *
-     * @return Query $query
+     * @return QueryInterface $query
      */
     public function cloneQuery() {
         return clone $this->currentquery;
@@ -325,7 +327,7 @@ class Datasource
      *
      * @param $query
      */
-    public function setQuery(Query $query) {
+    public function setQuery(QueryInterface $query) {
         $this->currentquery = $query;
     }
 

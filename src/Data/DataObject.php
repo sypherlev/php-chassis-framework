@@ -68,6 +68,29 @@ class DataObject
     }
 
     /**
+     * Gets a single result from the table.
+     *
+     * @param $value
+     * @param string $columnName
+     * @return bool|mixed
+     */
+    public function findById($id) {
+        $this->source
+            ->select()
+            ->table($this->tablename)
+            ->where(['id' => $id]);
+        $querycopy = $this->source->cloneQuery();
+        $result = $this->source->one();
+        if($result === false) {
+            $this->throwSQlError($querycopy, 'one', 'Error retrieving single result by ID from '.$this->tablename.', no result found');
+            return false;
+        }
+        else {
+            return $result;
+        }
+    }
+
+    /**
      * Gets multiple results from the table
      *
      * @param $columnName
@@ -196,6 +219,30 @@ class DataObject
             ->table($this->tablename)
             ->set($newValues)
             ->where([$wherecolumnName => $wherevalue]);
+        $querycopy = $this->source->cloneQuery();
+        $check = $this->source->execute();
+        if($check === false) {
+            $this->throwSQlError($querycopy, 'execute', 'Unknown Error: updating records in '.$this->tablename);
+            return false;
+        }
+        else {
+            return $check;
+        }
+    }
+
+    /**
+     * Updates records in the table by ID
+     *
+     * @param $id
+     * @param array $newValues
+     * @return bool
+     */
+    public function updateById($id, Array $newValues) {
+        $this->source
+            ->update()
+            ->table($this->tablename)
+            ->set($newValues)
+            ->where(['id' => $id]);
         $querycopy = $this->source->cloneQuery();
         $check = $this->source->execute();
         if($check === false) {
