@@ -1,26 +1,33 @@
 <?php
 
-namespace Chassis\Data;
+namespace Chassis\Migrate;
 
-class Migration
+use SypherLev\Blueprint\Blueprint;
+use SypherLev\Blueprint\QueryBuilders\SourceInterface;
+
+class BaseMigration extends Blueprint
 {
+    private $driver;
     private $dbuser;
     private $dbpass;
     private $db;
     private $dbhost;
-    private $source;
 
-    public function __construct(Dataconfig $config) {
-        $this->source = new Datasource($config);
-        $this->dbuser = $config->user;
-        $this->dbpass = $config->pass;
-        $this->db = $config->database;
-        $this->dbhost = $config->host;
+    public function __construct(SourceInterface $source) {
+        parent::__construct($source);
+    }
+
+    public function setRawDatabaseParams($driver, $user, $pass, $db, $host) {
+        $this->driver = $driver;
+        $this->dbuser = $user;
+        $this->dbpass = $pass;
+        $this->db = $db;
+        $this->dbhost = $host;
     }
 
     public function create($migrationname) {
-        $filename = time().'_'.preg_replace("/[^a-zA-Z0-9]/", "", $migrationname).'.sql';
-        $filepath = '..'. DIRECTORY_SEPARATOR .'migrations'. DIRECTORY_SEPARATOR . $filename;
+        $filename = time().'_'.preg_replace("/[^a-zA-Z0-9_]/", "", $migrationname).'.sql';
+        $filepath = 'migrations'. DIRECTORY_SEPARATOR . $filename;
         touch($filepath);
         if(file_exists($filepath)) {
             $newmigration = [
@@ -28,8 +35,7 @@ class Migration
                 'status' => 0,
                 'last_update' => time()
             ];
-            $this->source
-                ->insert()
+            $this->insert()
                 ->table('migrations')
                 ->add($newmigration)
                 ->execute();
@@ -41,14 +47,14 @@ class Migration
     }
 
     public function bootstrap($filename) {
-        $thisdir = '..' . DIRECTORY_SEPARATOR . 'migrations'. DIRECTORY_SEPARATOR;
+        $thisdir = 'migrations'. DIRECTORY_SEPARATOR;
         $filepath = $thisdir.$filename;
         if(file_exists($filepath)) {
             $check = $this->runMigration($filepath);
             if ($check !== true) {
                 $results[] = [
                     'file' => $filename,
-                    'output' => "Migration halt on the following output: \n" . $check
+                    'output' => "Migration halt on the following output: " . $check
                 ];
                 return $results;
             }
@@ -58,8 +64,7 @@ class Migration
                     'status' => 1,
                     'last_update' => time()
                 ];
-                $this->source
-                    ->insert()
+                $this->insert()
                     ->table('migrations')
                     ->add($newmigration)
                     ->execute();
@@ -78,27 +83,25 @@ class Migration
     public function migrate() {
         $this->checkNew();
         $results = [];
-        $migrations = $this->source
-            ->select()
+        $migrations = $this->select()
             ->table('migrations')
             ->where(['status' => 0])
             ->orderBy('last_update')
             ->many();
         foreach ($migrations as $m) {
-            $thisdir = '..' . DIRECTORY_SEPARATOR . 'migrations'. DIRECTORY_SEPARATOR;
+            $thisdir = 'migrations'. DIRECTORY_SEPARATOR;
             $filepath = $thisdir.$m->filename;
             if(file_exists($filepath)) {
                 $check = $this->runMigration($filepath);
                 if($check !== true) {
                     $results[] = [
                         'file' => $m->filename,
-                        'output' => "Migration halt on the following output: \n".$check
+                        'output' => "Migration halt on the following output: ".$check
                     ];
                     return $results;
                 }
                 else {
-                    $this->source
-                        ->update()
+                    $this->update()
                         ->table('migrations')
                         ->where(['id' => $m->id])
                         ->set(['status' => 1])
@@ -112,7 +115,7 @@ class Migration
             else {
                 $results[] = [
                     'file' => $m->filename,
-                    'output' => "Migration halt on missing file: \n".$m->filename
+                    'output' => "Migration halt on missing file: ".$m->filename
                 ];
                 return $results;
             }
@@ -121,10 +124,9 @@ class Migration
     }
 
     private function checkNew() {
-        $filelist = array_diff(scandir('..' . DIRECTORY_SEPARATOR . 'migrations'), array('.', '..'));
+        $filelist = array_diff(scandir('migrations'), array('.', '..'));
         foreach ($filelist as $file) {
-            $check = $this->source
-                ->select()
+            $check = $this->select()
                 ->table('migrations')
                 ->where(['filename' => $file])
                 ->one();
@@ -135,8 +137,7 @@ class Migration
                     'status' => 0,
                     'last_update' => time()
                 ];
-                $this->source
-                    ->insert()
+                $this->insert()
                     ->table('migrations')
                     ->add($newmigration)
                     ->execute();
@@ -157,7 +158,7 @@ class Migration
     // props to StackOverflow for this solution:
     // http://stackoverflow.com/questions/4027769/running-mysql-sql-files-in-php
     private function runSQLFile($path) {
-        $command = "mysql -u{$this->dbuser} -p{$this->dbpass} "
+        $command = "{$this->driver} -u{$this->dbuser} -p{$this->dbpass} "
             . "-h {$this->dbhost} -D {$this->db} < {$path}";
         return shell_exec($command);
     }

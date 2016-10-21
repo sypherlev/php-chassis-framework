@@ -1,30 +1,33 @@
 <?php
 
-namespace MyApp\Reusable;
+namespace Chassis\Migrate;
 
 use Chassis\Action\CliAction;
-use Chassis\Data\Dataconfig;
-use Chassis\Data\Migration;
+use Chassis\Data\SourceBootstrapper;
 use Chassis\Request\CliRequest;
 use Chassis\Response\CliResponse;
 
 class Migrate extends CliAction
 {
+    /* @var BaseMigration */
     private $migrationhandler;
+    private $database;
     private $cliresponse;
 
     public function __construct(CliRequest $request)
     {
         parent::__construct($request);
-        $this->migrationhandler = new Migration(new Dataconfig('local'));
+        $this->database = $this->request->getVarByPosition(0);
         $this->cliresponse = new CliResponse();
     }
 
     public function bootstrap() {
         try {
-            $check = $this->migrationhandler->bootstrap($this->request->getVarByPosition(0));
+            $this->setupMigrationHandler();
+            $check = $this->migrationhandler->bootstrap($this->request->getVarByPosition(1));
         }
         catch (\Exception $e) {
+            var_dump($e);
             $check = false;
         }
         if($check) {
@@ -34,16 +37,18 @@ class Migrate extends CliAction
             }
         }
         else {
-            $this->cliresponse->setOutputMessage('Error: bootstrap failure, no filename specified');
+            $this->cliresponse->setOutputMessage('Error: bootstrap failure, no filename specified or file not found');
         }
         $this->cliresponse->out();
     }
 
     public function createMigration() {
         try {
-            $check = $this->migrationhandler->create($this->request->getVarByPosition(0));
+            $this->setupMigrationHandler();
+            $check = $this->migrationhandler->create($this->request->getVarByPosition(1));
         }
         catch (\Exception $e) {
+            var_dump($e);
             $check = false;
         }
         if($check) {
@@ -56,16 +61,42 @@ class Migrate extends CliAction
     }
 
     public function migrateUnapplied() {
-        $check = $this->migrationhandler->migrate();
+        try {
+            $this->setupMigrationHandler();
+            $check = $this->migrationhandler->migrate();
+        }
+        catch (\Exception $e) {
+            var_dump($e);
+            $check = false;
+        }
         if(is_array($check)) {
             $this->cliresponse->setOutputMessage('Migration Result');
+            if(empty($check)) {
+                $check[] = 'No migrations waiting to be applied';
+            }
             foreach ($check as $idx => $m) {
                 $this->cliresponse->insertOutputData($idx, $m);
             }
         }
         else {
+            if($check === false) {
+                $check = "script failure";
+            }
             $this->cliresponse->setOutputMessage('Error: migrations could not be completed: '.$check);
         }
         $this->cliresponse->out();
+    }
+
+    private function setupMigrationHandler() {
+        $bootstrapper = new SourceBootstrapper();
+        $source = $bootstrapper->generateSource($this->database);
+        $this->migrationhandler = new BaseMigration($source);
+        $this->migrationhandler->setRawDatabaseParams(
+            $bootstrapper->driver,
+            $bootstrapper->user,
+            $bootstrapper->pass,
+            $bootstrapper->database,
+            $bootstrapper->host
+        );
     }
 }
