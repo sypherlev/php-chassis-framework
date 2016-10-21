@@ -2,53 +2,42 @@
 
 namespace MyApp\Auth;
 
-use Chassis\Data\AbstractData;
+use SypherLev\Blueprint\Blueprint;
+use SypherLev\Blueprint\Elements\Pattern;
+use SypherLev\Blueprint\QueryBuilders\SourceInterface;
 
-class AuthData extends AbstractData
+class AuthData extends Blueprint
 {
-    public function findUserByLogin($username, $password) {
-        $user = $this->source
-            ->select()
-            ->table('users')
-            ->where(['username' => $username])
-            ->columns([
-                'userid' => 'id',
-                'firstname' => 'first_name',
-                'password' => 'password'
-            ])
-            ->one();
-        if($user) {
-            if(password_verify($password, $user->password)) {
-                unset($user->password);
-                $newauthkey = uniqid('ap_', true);
-                $newauthexpiry = time()+(60*60*24);
-                $this->source
-                    ->update()
-                    ->table('users')
-                    ->where(['id' => $user->userid])
-                    ->set(['authkey' => $newauthkey, 'authexpiry' => $newauthexpiry])
-                    ->execute();
-                $user->authkey = $newauthkey;
-                return $user;
-            }
-            else {
-                return false;
-            }
-        }
-        else {
-            return false;
-        }
+    public function __construct(SourceInterface $datasource) {
+        parent::__construct($datasource);
+
+        $this->addPattern('auth', function(){
+            return (new Pattern())
+                ->table('users')
+                ->columns(['id', 'first_name', 'last_name', 'username', 'password']);
+        });
+
+        $this->addPattern('roles', function(){
+            return (new Pattern())
+                ->table('users')
+                ->columns(['user_roles' => ['user_role']])
+                ->join('users', 'user_roles', ['id' => 'user_id'], 'left');
+        });
+
+        $this->addPattern('auth_update', function(){
+            return (new Pattern())
+                ->table('users')
+                ->columns(['authkey', 'authexpiry', 'cookietoken', 'last_login']);
+        });
     }
 
-    public function findUserByAuthKey($authkey) {
-        $user = $this->source
+    public function findUserByAuth($authkey, $cookietoken) {
+        $user = $this
             ->select()
-            ->table('users')
-            ->where(['authkey' => $authkey])
+            ->withPattern('auth')
+            ->where(['authkey' => $authkey, 'cookietoken' => $cookietoken, 'authexpiry >' => time()])
             ->one();
         if($user) {
-            unset($user->password);
-            unset($user->authkey);
             return $user;
         }
         else {
@@ -56,13 +45,11 @@ class AuthData extends AbstractData
         }
     }
 
-    public function findRolesByAuthKey($authkey) {
-        $roles = $this->source
+    public function findRolesByAuth($authkey, $cookietoken) {
+        $roles = $this
             ->select()
-            ->columns(['user_roles' => ['user_role']])
-            ->table('users')
-            ->join('users', 'user_roles', ['id' => 'user_id'], 'left')
-            ->where(['authkey' => $authkey, 'authexpiry >' => time()])
+            ->withPattern('roles')
+            ->where(['authkey' => $authkey, 'cookietoken' => $cookietoken, 'authexpiry >' => time()])
             ->many();
         if($roles && count($roles) > 0) {
             return $roles;
@@ -72,44 +59,11 @@ class AuthData extends AbstractData
         }
     }
 
-    public function checkUniqueness(Array $userdetails) {
-        $check = $this->source
-            ->select()
-            ->table('users')
-            ->where(['username' => $userdetails['username'], 'email' => $userdetails['email']])
-            ->limit(1)
-            ->one();
-        if($check) {
-            return true;
-        }
-        else {
-            return false;
-        }
+    public function findUserByEmail($email) {
+        return $this->select()->withPattern('auth')->where(['email' => $email])->one();
     }
 
-    public function createUser(Array $userdetails) {
-        if(!$this->checkUniqueness($userdetails)) {
-            $result = $this->source->insert()->table('users')->add($userdetails)->execute();
-            if($result) {
-                return $this->source->lastInsertId('users');
-            }
-            else {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public function addRole($userid, $role) {
-        $this->source->insert()
-            ->table('user_roles')
-            ->add(['user_id' => $userid, 'user_role' => $role]);
-        $result = $this->source->execute();
-        if($result) {
-            return $this->source->lastInsertId('user_roles');
-        }
-        else {
-            return false;
-        }
+    public function updateAuth($id, $auth_credentials) {
+        return $this->update()->withPattern('auth_update')->set($auth_credentials)->where(['id' => $id])->execute();
     }
 }
