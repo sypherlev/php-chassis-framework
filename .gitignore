@@ -1,5 +1,3 @@
 /vendor
 .idea/
-app/tests/
 .env
-/web/php_errors.log
