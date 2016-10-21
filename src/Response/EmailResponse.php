@@ -24,9 +24,9 @@ class EmailResponse implements ResponseInterface
             $this->appendOutputData();
         }
         if($this->emailfrom != '') {
-            $headers = 'From: '.$this->emailfrom.' <'.$this->emailfrom.'>' . PHP_EOL .
-                'Reply-To: '.$this->emailfrom.' <'.$this->emailfrom.'>' . PHP_EOL .
-                'X-Mailer: PHP/' . phpversion();
+            $headers = "From: ".$this->emailfrom." <".$this->emailfrom.">" . "\r\n" .
+                "Reply-To: ".$this->emailfrom." <".$this->emailfrom.">" . "\r\n" .
+                "X-Mailer: PHP/" . phpversion();
         }
         else {
             $headers = '';
