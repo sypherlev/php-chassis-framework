@@ -3,34 +3,38 @@
 namespace Chassis\Response;
 
 
-class EmailResponse implements ResponseInterface
+class EmailResponse
 {
     private $emailto;
     private $emailfrom;
     private $subject;
-    private $data;
     private $message;
-    private $adddata = false;
     private $devMode = true;
+    private $mailer;
 
-    public function insertOutputData($label, $data)
+    public function __construct()
     {
-        $this->data[$label] = $data;
+        if(isset($_ENV['devmode']) && $_ENV['devmode'] === 'false') {
+            $this->setDevMode(false);
+        }
+        $this->mailer = $mailer = new \PHPMailer();
+        $this->mailer->isSendmail();
     }
 
-    public function out()
+    protected function attachFile($filepath, $name = '')
     {
-        if($this->adddata) {
-            $this->appendOutputData();
-        }
-        if($this->emailfrom != '') {
-            $headers = "From: ".$this->emailfrom." <".$this->emailfrom.">" . "\r\n" .
-                "Reply-To: ".$this->emailfrom." <".$this->emailfrom.">" . "\r\n" .
-                "X-Mailer: PHP/" . phpversion();
+        if($name != '') {
+            $this->mailer->addAttachment($filepath);
         }
         else {
-            $headers = '';
+            $this->mailer->addAttachment($filepath, $name);
         }
+    }
+
+    protected function out()
+    {
+        $this->mailer->setFrom($this->emailfrom);
+        $this->mailer->addAddress($this->emailto);
         if($this->devMode) {
             $timestamp = time();
             $folder = '..'. DIRECTORY_SEPARATOR . 'emails';
@@ -41,7 +45,6 @@ class EmailResponse implements ResponseInterface
             touch($filename);
             if(file_exists($filename)) {
                 $compiledemail = "";
-                $compiledemail .= json_encode($headers)."\n\n";
                 $compiledemail .= "To: $this->emailto\n";
                 $compiledemail .= "Subject: $this->subject\n\n";
                 $compiledemail .= "$this->message";
@@ -52,33 +55,24 @@ class EmailResponse implements ResponseInterface
             }
         }
         else {
-            mail($this->emailto, $this->subject, $this->message, $headers);
+            $this->mailer->Subject = $this->subject;
+            $this->mailer->Body = $this->message;
+            $output = $this->mailer->send();
+            $this->mailer = new \PHPMailer();
+            if(!$output) {
+                throw (new \Exception($this->mailer->ErrorInfo));
+            }
         }
     }
 
-    public function setEmailParams($emailto, $subject = 'Email Output', $message = '', $emailfrom = '', $adddata = false) {
+    public function setEmailParams($emailto, $subject = 'Email Output', $message = '', $emailfrom = '') {
         $this->emailto = $emailto;
         $this->emailfrom = $emailfrom;
         $this->message = $message;
         $this->subject = $subject;
-        $this->adddata = $adddata;
     }
 
     protected function setDevMode($switch = true) {
         $this->devMode = $switch;
-    }
-
-    private function appendOutputData() {
-        foreach ($this->data as $idx => $d) {
-            if(!is_int($idx)) {
-                $this->message .= $idx.": ";
-            }
-            if(!is_string($d)) {
-                $this->message .= json_encode($d)."\n\n";
-            }
-            else {
-                $this->message .= $d."\n\n";
-            }
-        }
     }
 }
