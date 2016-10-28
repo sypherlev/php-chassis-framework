@@ -4,22 +4,30 @@ Chassis is a microframework/collection of stuff that's designed to be dangerousl
 
 It's largely the result of my streamlining my own development process, following my own rules for OOP and the ADR design pattern. This particular version consists of the framework itself and a few other things in /app so I can keep all it all somewhat organized.
 
-Apart from FastRoute and dotENV, Chassis has a pretty robust query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional).
+Apart from FastRoute and dotENV, Chassis uses the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go.
 
 Use it at your own risk.
+
+## Requirements
+
+* sendmail (if you intend to use the built-in EmailResponse)
+* PHP 7.0
 
 ## Installation
 
 * Download it or clone it from here.
 * Set your web root to the /web folder.
 * Run composer install.
-* Generate a new .env file from .env_sample.
+* Copy a new .env file from .env_sample, adding your own parameters.
+* Bootstrap the database using the migration tool.
 
 ## The various bits of the framework
 
 Chassis is composed of two main parts - the /src folder, where all the magical framework crap lives, and the /app folder, where YOUR magical crap lives.
 
 You've also got the /migrations folder, which the Migrate tool uses. There's one migration in there right now that'll make a few user tables, if you need to get going quickly. 
+
+If your .env file sets `devMode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent.
 
 The /web folder has all the front-end goodness, like your JS and CSS assets, and your HTML templates.
 
@@ -31,13 +39,32 @@ The /web folder has all the front-end goodness, like your JS and CSS assets, and
 * Open the RouteCollection.php class in /app.
 * Change its namespace to match the PS-4 autoload etc etc.
 * **Seriously, do NOT forget this or none of the routing will work.**
+* Open the ObjectCollection.php class in /app.
+* Change its namespace to match the PS-4 autoload etc etc.
 * If you're feeling silly, you can leave them all at 'MyApp\\\\'.
+* Add your database details in the following format:
+
+    <prefix>_engine=mysql
+    <prefix>_host=localhost
+    <prefix>_username=user
+    <prefix>_password=pass
+    <prefix>_dbname=dbname
+    
+* The prefix is used to identify the database. See the .env_sample for.
+
+## Migration
+
+**The migration tool is one-way only; no rollbacks are possible unless you add another SQL script file that un-does something in a previous migration.**
+
+The bootstrap.sql file in /migrations has user tables which plug into the Auth system in this sample, but the only one that's really required is the migrations table.
+
+In the project root, run `./chassism.sh` to see options for migrations. (You may need to make it executable first.)
 
 ## Your first route
 
 All your routes are stored in /app/RouteCollection.php. RouteCollection has one method, the constructor, which contains a list of routes. RouteCollection is basically just an extension of the FastRoute dispatcher that registers all your routes before the framework kicks off. List them all here - follow the examples there if you're not sure - and group them using comments. They all follow the same FastRoute style:
 
-    $this->addRoute('POST', '/this_is_a_pattern', 'Namespace\\Classname:methodname');
+    $this->addRoute('POST', '/this_is_a_pattern', 'Namespace\\Domain\\Folder\\Classname:methodname');
     
 The router matches the route, creates an object of type Classname, and triggers the method called methodname. Classname must be a class that implements Chassis\Action\ActionInterface, and for convenience there are two versions available: WebAction and CliAction. So it's easiest to have your Classname extend one of those two classes and you're good to go.
 
@@ -84,7 +111,11 @@ In /app/Auth, I've got some classes that do user signin and creation (somewhat h
 Right now I have the following types built-in:
 
  * API - formatted JSON
- * Email - uses mail() to send an email
+ * Email - uses PHPMailer to send an email
  * File - uses readfile() to throw files at the browser
  * Web - slightly complicated, uses a recursive DOM manipulation to merge data into a HTML template. Still experimental.
  * CLI - command line output.
+ 
+## The Object Collection
+
+Using the ObjectCollection is optional. It's a very basic service locator that allows for mixing and matching service objects without creating new copies of the DBAL classes or additional database connections.
