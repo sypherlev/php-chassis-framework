@@ -13,7 +13,8 @@
   "require": {
     "nikic/fast-route": "^1.0",
     "vlucas/phpdotenv": "^2.2",
-    "sypherlev/blueprint": "@dev"
+    "sypherlev/blueprint": "@dev",
+    "phpmailer/phpmailer": "~5.2"
   },
   "require-dev": {
     "phpunit/phpunit": "5.4.*"
