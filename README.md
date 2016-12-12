@@ -10,7 +10,7 @@ Use it at your own risk.
 
 ## Requirements
 
-* sendmail (if you intend to use the built-in EmailResponse)
+* postfix (if you intend to use the built-in EmailResponse)
 * PHP 7.0
 
 ## Installation
@@ -20,6 +20,7 @@ Use it at your own risk.
 * Run composer install.
 * Copy a new .env file from .env_sample, adding your own parameters.
 * Bootstrap the database using the migration tool.
+* If you're using the built-in EmailResponse, [install Postfix](https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-on-ubuntu-16-04).
 
 ## The various bits of the framework
 
