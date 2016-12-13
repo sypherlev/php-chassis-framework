@@ -1,6 +1,6 @@
 <?php
 
-namespace MyApp\Sample;
+namespace MyApp\Domain\Sample;
 
 use Chassis\Action\WebAction;
 use Chassis\Request\WebRequest;

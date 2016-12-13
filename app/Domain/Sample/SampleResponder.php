@@ -1,6 +1,6 @@
 <?php
 
-namespace MyApp\Sample;
+namespace MyApp\Domain\Sample;
 
 use Chassis\Response\ApiResponse;
 
