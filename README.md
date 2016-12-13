@@ -1,10 +1,31 @@
 # The Chassis Framework
 
-Chassis is a microframework/collection of stuff that's designed to be dangerously flexible, and aimed at rapid development. It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein business logic you need to get things done.
+Chassis is a microframework/collection-of-stuff-loosely-held-together-with-string that's designed to be dangerously flexible. It will not hold your hand, or prevent you from making horrible choices. It will get requests from the web or command line into your business domain, and do something with the data that comes out, and otherwise stay out of your way. You don't even need to use half of it if you don't want to.
 
-It's largely the result of my streamlining my own development process, following my own rules for OOP and the ADR design pattern. This particular version consists of the framework itself and a few other things in /app so I can keep all it all somewhat organized.
+It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done. Apart from that, Chassis uses the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go. The WebResponse uses Twig templates.
 
-Apart from FastRoute and dotENV, Chassis uses the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go.
+It's largely the result of my streamlining my own development process, following my own rules for OOP and the ADR design pattern. This particular version consists of the framework itself and a few other things in /app so I can keep all it all somewhat organized. It uses the bare minimum of code to wire together some common packages to handle web and command line requests.
+
+It has the following out of the box:
+
+* A router
+* A .env config file
+* Stuff to handle incoming requests
+* Five basic response types: API, Email, File, CLI, and Web (optional)
+* A very simple service locator (optional)
+* The Blueprint query builder (optional)
+
+It does not have the following out of the box:
+
+* Code generation
+* An ORM
+* A logging system
+* Input Validation
+* Middleware
+* Anything to do with encryption
+* Probably a bunch more stuff
+
+If you want these features, you'll have to add them yourself.
 
 Use it at your own risk.
 
@@ -17,7 +38,7 @@ Use it at your own risk.
 
 * Download it or clone it from here.
 * Set your web root to the /web folder.
-* Run composer install.
+* Run `composer install`.
 * Copy a new .env file from .env_sample, adding your own parameters.
 * Bootstrap the database using the migration tool.
 * If you're using the built-in EmailResponse, [install Postfix](https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-on-ubuntu-16-04).
@@ -28,21 +49,16 @@ Chassis is composed of two main parts - the /src folder, where all the magical f
 
 You've also got the /migrations folder, which the Migrate tool uses. There's one migration in there right now that'll make a few user tables, if you need to get going quickly. 
 
-If your .env file sets `devMode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent.
+If your .env file sets `devMode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent. Using devMode will also set Twig to `debug=true`. 
 
-The /web folder has all the front-end goodness, like your JS and CSS assets, and your HTML templates.
+The /web folder has all the front-end goodness, like your JS and CSS assets. The /cache folder is where the Twig cache stuff is stored. The /templates folder contains all the Twig templates.
 
 ## Setup
 
 * Open your .env file.
 * Change the APP_NAME to whatever.
 * Change the APP_NAMESPACE to match the PS-4 autoload for the /app folder in composer.json. This is super important because it makes everything go.
-* Open the RouteCollection.php class in /app.
-* Change its namespace to match the PS-4 autoload etc etc.
-* **Seriously, do NOT forget this or none of the routing will work.**
-* Open the ObjectCollection.php class in /app.
-* Change its namespace to match the PS-4 autoload etc etc.
-* If you're feeling silly, you can leave them all at 'MyApp\\\\'.
+* Set `devMode=true` if you need it to be, otherwise set `devMode=false`.
 * Add your database details in the following format:
 
     <prefix>_engine=mysql
@@ -51,7 +67,13 @@ The /web folder has all the front-end goodness, like your JS and CSS assets, and
     <prefix>_password=pass
     <prefix>_dbname=dbname
     
-* The prefix is used to identify the database. See the .env_sample for.
+* The prefix is used to identify the database. See the .env_sample for how it should look. You can add any number of databases in here as long as they all have different prefixes.
+* Open the RouteCollection.php class in /app.
+* Change its namespace to match the PS-4 autoload etc etc.
+* **Seriously, do NOT forget this or none of the routing will work.**
+* Open the ObjectCollection.php class in /app.
+* Change its namespace to match the PS-4 autoload etc etc.
+* If you're feeling silly, you can leave them all at 'MyApp\\\\'.
 
 ## Migration
 
@@ -111,12 +133,43 @@ In /app/Auth, I've got some classes that do user signin and creation (somewhat h
 
 Right now I have the following types built-in:
 
- * API - formatted JSON
+ * API - outputs a formatted JSON
  * Email - uses PHPMailer to send an email
  * File - uses readfile() to throw files at the browser
- * Web - slightly complicated, uses a recursive DOM manipulation to merge data into a HTML template. Still experimental.
- * CLI - command line output.
+ * Web - Puts data into Twig templates
+ * CLI - command line output
  
 ## The Object Collection
 
-Using the ObjectCollection is optional. It's a very basic service locator that allows for mixing and matching service objects without creating new copies of the DBAL classes or additional database connections.
+Using the ObjectCollection is optional. It's a very basic service locator that allows for mixing and matching service objects without creating new copies of the DBAL classes or additional database connections. It has only two methods: `addEntity` and `getEntity`.
+
+You can substitute any dependency injection container or service locator you prefer.
+
+In the ObjectCollection constructor, use `$this->addEntity(...)` to store Closures that will generate the objects you need.
+
+    $this->addEntity('bootstrapper', function(){
+        return new SourceBootstrapper();
+    });
+    
+You can use `getEntity` in Closures to check if the objects you need have been created, and use them to create other objects.
+
+    $this->addEntity('local-source', function() {
+        $bootstrapper = $this->getEntity('bootstrapper');
+        if($bootstrapper) {
+            return $bootstrapper->generateSource('local');
+        }
+        return false;
+    });
+    
+    $this->addEntity('user-local', function(){
+        $localsource = $this->getEntity('local-source');
+        if($localsource) {
+            return new DBAL\UserData($localsource);
+        }
+        return false;
+    });
+    
+Each entity requires a label and is retrieved by calling `getEntity('labelname')`.
+
+The ObjectCollection can be created and added to the service class constructors, or injected into them. It's a plain PHP class, no magic going on there.
+
