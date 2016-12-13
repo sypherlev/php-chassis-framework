@@ -47,7 +47,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['cookies'][$name];
         }
         else {
-            throw(new \Exception("Can't access cookie [$name]: Cookie does not exist"));
+            return false;
         }
     }
 
@@ -56,7 +56,7 @@ class WebRequest extends AbstractRequest
             return $this->sanitize($this->requestdata['post'][$name]);
         }
         else {
-            throw(new \Exception("Can't access [$name] in POST: Variable does not exist"));
+            return false;
         }
     }
 
@@ -65,7 +65,7 @@ class WebRequest extends AbstractRequest
             return $this->sanitize($this->requestdata['body'][$name]);
         }
         else {
-            throw(new \Exception("Can't access [$name] in php://input: Variable does not exist"));
+            return false;
         }
     }
 
@@ -74,7 +74,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['get'][$name];
         }
         else {
-            throw(new \Exception("Can't access [$name] in GET: Variable does not exist"));
+            return false;
         }
     }
 
@@ -83,7 +83,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['segments'][$int];
         }
         else {
-            throw(new \Exception("Can't access segment at position $int: Segment does not exist"));
+            return false;
         }
     }
 
@@ -92,7 +92,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['files'][$name];
         }
         else {
-            throw(new \Exception("Can't access [$name] in FILES: Variable does not exist"));
+            return false;
         }
     }
 
