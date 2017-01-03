@@ -20,7 +20,7 @@ class WebResponse implements ResponseInterface
         $loader = new \Twig_Loader_Filesystem('../templates');
         $twig = new \Twig_Environment($loader, array(
             'cache' => '../cache',
-            'debug' => $_ENV['devMode']
+            'debug' => $_ENV['devmode']
         ));
         $template = $twig->load($this->template);
         echo $template->render($this->data);
