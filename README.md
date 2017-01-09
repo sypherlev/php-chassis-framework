@@ -49,7 +49,7 @@ Chassis is composed of two main parts - the /src folder, where all the magical f
 
 You've also got the /migrations folder, which the Migrate tool uses. There's one migration in there right now that'll make a few user tables, if you need to get going quickly. 
 
-If your .env file sets `devMode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent. Using devMode will also set Twig to `debug=true`. 
+If your .env file sets `devmode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent. Using devMode will also set Twig to `debug=true`. 
 
 The /web folder has all the front-end goodness, like your JS and CSS assets. The /cache folder is where the Twig cache stuff is stored. The /templates folder contains all the Twig templates.
 
@@ -61,11 +61,11 @@ The /web folder has all the front-end goodness, like your JS and CSS assets. The
 * Set `devMode=true` if you need it to be, otherwise set `devMode=false`.
 * Add your database details in the following format:
 
-    <prefix>_engine=mysql
-    <prefix>_host=localhost
-    <prefix>_username=user
-    <prefix>_password=pass
-    <prefix>_dbname=dbname
+    `<prefix>_engine=mysql`
+    `<prefix>_host=localhost`
+    `<prefix>_username=user`
+    `<prefix>_password=pass`
+    `<prefix>_dbname=dbname`
     
 * The prefix is used to identify the database. See the .env_sample for how it should look. You can add any number of databases in here as long as they all have different prefixes.
 * Open the RouteCollection.php class in /app.
