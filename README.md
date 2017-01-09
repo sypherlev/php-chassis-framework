@@ -61,11 +61,11 @@ The /web folder has all the front-end goodness, like your JS and CSS assets. The
 * Set `devMode=true` if you need it to be, otherwise set `devMode=false`.
 * Add your database details in the following format:
 
-    `<prefix>_engine=mysql`
-    `<prefix>_host=localhost`
-    `<prefix>_username=user`
-    `<prefix>_password=pass`
-    `<prefix>_dbname=dbname`
+    prefix_engine=mysql
+    prefix_host=localhost
+    prefix_username=user
+    prefix_password=pass
+    prefix_dbname=dbname
     
 * The prefix is used to identify the database. See the .env_sample for how it should look. You can add any number of databases in here as long as they all have different prefixes.
 * Open the RouteCollection.php class in /app.
