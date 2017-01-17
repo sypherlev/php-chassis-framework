@@ -55,10 +55,9 @@ The /web folder has all the front-end goodness, like your JS and CSS assets. The
 
 ## Setup
 
-* Open your .env file.
-* Change the APP_NAME to whatever.
-* Change the APP_NAMESPACE to match the PS-4 autoload for the /app folder in composer.json. This is super important because it makes everything go.
-* Set `devmode=true` if you need it to be, otherwise set `devmode=false`.
+Open your .env file.
+
+Set `devmode=true` if you need it to be, otherwise leave it at `devmode=false`.
 
 Add your database details in the following format:
 
@@ -69,13 +68,6 @@ Add your database details in the following format:
     prefix_dbname=dbname
     
 The prefix is used to identify the database. See the .env_sample for how it should look. You can add any number of databases in here as long as they all have different prefixes.
-
-* Open the RouteCollection.php class in /app.
-* Change its namespace to match the PS-4 autoload etc etc.
-* **Seriously, do NOT forget this or none of the routing will work.**
-* Open the ObjectCollection.php class in /app.
-* Change its namespace to match the PS-4 autoload etc etc.
-* If you're feeling silly, you can leave them all at 'MyApp\\\\'.
 
 ## Migration
 
