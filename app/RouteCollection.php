@@ -1,9 +1,7 @@
 <?php
 
-// ADD YOUR OWN NAMESPACE HERE
 namespace App;
 
-// DO NOT CHANGE THIS
 use Chassis\Router;
 
 class RouteCollection extends Router
