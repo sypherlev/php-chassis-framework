@@ -1,10 +1,10 @@
 <?php
 
-namespace MyApp\Domain\Auth;
+namespace App\Domain\Auth;
 
-use MyApp\Common\Security;
-use MyApp\DBAL\AuthData;
-use MyApp\ObjectCollection;
+use App\Common\Security;
+use App\DBAL\AuthData;
+use App\ObjectCollection;
 
 class AuthService
 {

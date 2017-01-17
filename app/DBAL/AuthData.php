@@ -1,6 +1,6 @@
 <?php
 
-namespace MyApp\DBAL;
+namespace App\DBAL;
 
 use SypherLev\Blueprint\Blueprint;
 use SypherLev\Blueprint\Elements\Pattern;

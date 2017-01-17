@@ -1,10 +1,10 @@
 <?php
 
-namespace MyApp;
+namespace App;
 
 use Chassis\Data\SourceBootstrapper;
-use MyApp\Common\Security;
-use MyApp\DBAL;
+use App\Common\Security;
+use App\DBAL;
 
 class ObjectCollection
 {

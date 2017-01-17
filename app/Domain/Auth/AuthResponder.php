@@ -1,6 +1,6 @@
 <?php
 
-namespace MyApp\Domain\Auth;
+namespace App\Domain\Auth;
 
 use Chassis\Response\ApiResponse;
 

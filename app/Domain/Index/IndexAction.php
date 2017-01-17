@@ -1,6 +1,6 @@
 <?php
 
-namespace MyApp\Domain\Index;
+namespace App\Domain\Index;
 
 use Chassis\Action\WebAction;
 use Chassis\Request\WebRequest;

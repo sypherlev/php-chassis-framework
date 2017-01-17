@@ -1,8 +1,8 @@
 <?php
 
-namespace MyApp\Common;
+namespace App\Common;
 
-use MyApp\ObjectCollection;
+use App\ObjectCollection;
 
 class BasicService
 {

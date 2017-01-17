@@ -1,9 +1,9 @@
 <?php
 
-namespace MyApp\Domain\Sample;
+namespace App\Domain\Sample;
 
-use MyApp\Common\BasicService;
-use MyApp\DBAL\UserData;
+use App\Common\BasicService;
+use App\DBAL\UserData;
 
 class SampleService extends BasicService
 {

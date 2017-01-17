@@ -1,8 +1,8 @@
 <?php
 
-namespace MyApp\Common;
+namespace App\Common;
 
-use MyApp\DBAL\AuthData;
+use App\DBAL\AuthData;
 
 class Security
 {

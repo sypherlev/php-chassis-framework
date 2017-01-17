@@ -1,6 +1,6 @@
 <?php
 
-namespace MyApp\Common;
+namespace App\Common;
 
 
 class AuthEntity
