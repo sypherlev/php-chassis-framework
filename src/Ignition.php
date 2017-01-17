@@ -2,6 +2,7 @@
 
 namespace Chassis;
 
+use App\RouteCollection;
 use Chassis\Action\ActionInterface;
 use Chassis\Request\CliRequest;
 use Chassis\Request\WebRequest;
@@ -37,12 +38,7 @@ class Ignition
                 header("Location: $secureredirect");
                 exit;
             }
-            $routecollection = $_ENV['app_namespace'] . 'RouteCollection';
-            if(!class_exists($routecollection)) {
-                http_response_code(500);
-                die('Namespace mismatch error; please make sure the app namespace is defined.');
-            }
-            $router = new $routecollection();
+            $router = new RouteCollection();
             $router->readyDispatcher();
             $response = $router->trigger();
             if (is_null($response)) {
