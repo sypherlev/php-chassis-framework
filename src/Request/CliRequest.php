@@ -47,8 +47,6 @@ class CliRequest extends AbstractRequest
                 $count++;
             }
         }
-        else {
-            throw(new \Exception("Can't access variable at position $int: Variable does not exist"));
-        }
+        return null;
     }
 }
