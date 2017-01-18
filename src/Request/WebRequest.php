@@ -47,7 +47,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['cookies'][$name];
         }
         else {
-            return false;
+            return null;
         }
     }
 
@@ -56,7 +56,7 @@ class WebRequest extends AbstractRequest
             return $this->sanitize($this->requestdata['post'][$name]);
         }
         else {
-            return false;
+            return null;
         }
     }
 
@@ -65,7 +65,7 @@ class WebRequest extends AbstractRequest
             return $this->sanitize($this->requestdata['body'][$name]);
         }
         else {
-            return false;
+            return null;
         }
     }
 
@@ -74,7 +74,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['get'][$name];
         }
         else {
-            return false;
+            return null;
         }
     }
 
@@ -83,7 +83,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['segments'][$int];
         }
         else {
-            return false;
+            return null;
         }
     }
 
@@ -92,7 +92,7 @@ class WebRequest extends AbstractRequest
             return $this->requestdata['files'][$name];
         }
         else {
-            return false;
+            return null;
         }
     }
 
