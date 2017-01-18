@@ -6,7 +6,7 @@ class WebRequest extends AbstractRequest
 {
 
     private $allowedtags =
-        '<p><hr><em><strong><blockquote><b><i><u><sup><sub><strike><h1><h2><h3><h4><h5><h6><table><th><td><tbody><thead><ul><ol><li';
+        '<p><hr><em><strong><blockquote><b><i><u><sup><sub><strike><h1><h2><h3><h4><h5><h6><table><th><td><tbody><thead><ul><ol><li>';
 
     public function __construct()
     {
