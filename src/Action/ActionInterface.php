@@ -11,4 +11,5 @@ interface ActionInterface
     public function disableExecution(ResponseInterface $response);
     public function enableExecution();
     public function execute();
+    public function getRequest();
 }

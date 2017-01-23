@@ -3,16 +3,14 @@
 namespace Chassis\Action;
 
 use Chassis\Request\WebRequest;
-use Chassis\Action\Traits\ActionImplementation;
 
-abstract class WebAction implements ActionInterface
+class WebAction extends AbstractAction
 {
-    use ActionImplementation;
+    /* @var WebRequest */
+    private $request;
 
-    protected $request;
-
-    public function __construct(WebRequest $request)
+    public function getRequest()
     {
-        $this->request = $request;
+        return $this->request;
     }
 }

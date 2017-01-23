@@ -3,16 +3,14 @@
 namespace Chassis\Action;
 
 use Chassis\Request\CliRequest;
-use Chassis\Action\Traits\ActionImplementation;
 
-class CliAction implements ActionInterface
+class CliAction extends AbstractAction
 {
-    use ActionImplementation;
+    /* @var CliRequest */
+    private $request;
 
-    protected $request;
-
-    public function __construct(CliRequest $request)
+    public function getRequest()
     {
-        $this->request = $request;
+        return $this->request;
     }
 }
