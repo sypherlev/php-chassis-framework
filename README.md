@@ -37,7 +37,7 @@ Use it at your own risk.
 ## Installation
 
 * Download it or clone it from here.
-* Set your web root to the /web folder.
+* Set your web root to the /public folder.
 * Run `composer install`.
 * Copy a new .env file from .env_sample, adding your own parameters.
 * Bootstrap the database using the migration tool.
@@ -51,7 +51,7 @@ You've also got the /migrations folder, which the Migrate tool uses. There's one
 
 If your .env file sets `devmode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent. Using devMode will also set Twig to `debug=true`. 
 
-The /web folder has all the front-end goodness, like your JS and CSS assets. The /cache folder is where the Twig cache stuff is stored. The /templates folder contains all the Twig templates.
+The /public folder has all the front-end goodness, like your JS and CSS assets. The /cache folder is where the Twig cache stuff is stored. The /templates folder contains all the Twig templates.
 
 ## Setup
 
