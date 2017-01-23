@@ -18,7 +18,10 @@ class AuthAction extends WebAction
     }
 
     public function login() {
-        $user = $this->authservice->signin($this->request->getBodyVar('username'), $this->request->getBodyVar('password'));
+        $user = $this->authservice->signin(
+            $this->getRequest()->getBodyVar('username'),
+            $this->getRequest()->getBodyVar('password')
+        );
         $this->responder->signin($user);
     }
 }
