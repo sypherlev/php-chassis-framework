@@ -17,14 +17,35 @@ class Migrate extends CliAction
     public function __construct(CliRequest $request)
     {
         parent::__construct($request);
-        $this->database = $this->request->getVarByPosition(0);
+        $this->database = $this->getRequest()->getVarByPosition(0);
         $this->cliresponse = new CliResponse();
     }
 
     public function bootstrap() {
         try {
             $this->setupMigrationHandler();
-            $check = $this->migrationhandler->bootstrap($this->request->getVarByPosition(1));
+            $check = $this->migrationhandler->bootstrap($this->getRequest()->getVarByPosition(1));
+        }
+        catch (\Exception $e) {
+            var_dump($e);
+            $check = false;
+        }
+        if($check) {
+            $this->cliresponse->setOutputMessage('Bootstrap output');
+            foreach ($check as $idx => $m) {
+                $this->cliresponse->insertOutputData($idx, $m);
+            }
+        }
+        else {
+            $this->cliresponse->setOutputMessage('Error: bootstrap failure, no filename specified or file not found');
+        }
+        $this->cliresponse->out();
+    }
+
+    public function backup() {
+        try {
+            $this->setupMigrationHandler();
+            $check = $this->migrationhandler->backup();
         }
         catch (\Exception $e) {
             var_dump($e);
@@ -45,7 +66,7 @@ class Migrate extends CliAction
     public function createMigration() {
         try {
             $this->setupMigrationHandler();
-            $check = $this->migrationhandler->create($this->request->getVarByPosition(1));
+            $check = $this->migrationhandler->create($this->getRequest()->getVarByPosition(1));
         }
         catch (\Exception $e) {
             var_dump($e);

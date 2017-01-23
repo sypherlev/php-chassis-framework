@@ -80,6 +80,10 @@ class BaseMigration extends Blueprint
         }
     }
 
+    public function backup() {
+        return $this->runBackup();
+    }
+
     public function migrate() {
         $this->checkNew();
         $results = [];
@@ -160,6 +164,17 @@ class BaseMigration extends Blueprint
     private function runSQLFile($path) {
         $command = "{$this->driver} -u{$this->dbuser} -p{$this->dbpass} "
             . "-h {$this->dbhost} -D {$this->db} < {$path}";
+        return shell_exec($command);
+    }
+
+    private function runBackup() {
+        $folder = "../databackups";
+        if(!file_exists($folder)) {
+            mkdir($folder, 0755);
+        }
+        $filename = "{$this->db}-backup-".date('Y-m-d--H-i-s', time()).".sql.gz";
+        $command = "mysqldump -u{$this->dbuser} -p{$this->dbpass} "
+            . "-h {$this->dbhost} -D {$this->db} | gzip > ".$folder.'/'.$filename;
         return shell_exec($command);
     }
 }
