@@ -4,7 +4,7 @@ namespace App\Domain\Sample;
 
 use Chassis\Response\ApiResponse;
 
-class SecureResponder extends ApiResponse
+class SampleResponder extends ApiResponse
 {
     public function __construct()
     {
