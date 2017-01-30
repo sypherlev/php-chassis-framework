@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 echo "Starting Chassis Migration..."
 if [ $# -eq 0 ]
