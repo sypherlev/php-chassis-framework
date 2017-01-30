@@ -13,6 +13,7 @@ It has the following out of the box:
 * Stuff to handle incoming requests
 * Five basic response types: API, Email, File, CLI, and Web (optional)
 * A very simple service locator (optional)
+* Basic middleware implementation (optional)
 * The Blueprint query builder (optional)
 
 It does not have the following out of the box:
@@ -21,7 +22,6 @@ It does not have the following out of the box:
 * An ORM
 * A logging system
 * Input Validation
-* Middleware
 * Anything to do with encryption
 * Probably a bunch more stuff
 
@@ -45,13 +45,23 @@ Use it at your own risk.
 
 ## The various bits of the framework
 
-Chassis is composed of two main parts - the /src folder, where all the magical framework crap lives, and the /app folder, where YOUR magical crap lives.
+Chassis is composed of two main parts - the /src folder, where all the framework's magical crap lives, and the /app folder, where YOUR magical crap lives.
 
 You've also got the /migrations folder, which the Migrate tool uses. There's one migration in there right now that'll make a few user tables, if you need to get going quickly. 
 
 If your .env file sets `devmode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent. Using `devmode` will also set Twig to `debug=true`. 
 
 The /public folder has all the front-end goodness, like your JS and CSS assets. The /cache folder is where the Twig cache stuff is stored. The /templates folder contains all the Twig templates.
+
+Inside the /app folder, I've added the following:
+
+* /Common: classes which may be used in a few different places; a catch-all for stuff that doesn't fit easily anywhere else
+* /DBAL: data classes, or anything that interacts with the database
+* /Domain: the business domain, where most of your app's logic is going to run
+* /Middleware: the various middleware classes
+* Class MiddlewareCollection: where you can store middleware queues, to be used in Actions later
+* Class ObjectCollection: the very basic service locator that I will probably replace with something better
+* Class RouteCollection: the routing list
 
 ## Setup
 
@@ -75,7 +85,7 @@ The prefix is used to identify the database. See the .env_sample for how it shou
 
 The bootstrap.sql file in /migrations has user tables which plug into the Auth system in this sample, but the only one that's really required is the migrations table.
 
-In the project root, run `./chassism.sh` to see options for migrations. (You may need to make it executable first.)
+In the project root, run `bin/chassis` to see options for migrations. (You may need to make it executable first.)
 
 ## Your first route
 
@@ -115,8 +125,8 @@ The point of all this is that each part - the action, the domain object, and the
 
 In /app/Auth, I've got some classes that do user signin and creation (somewhat half-assedly, sorry). Here's how it would work for a form, submitted through AngularJS, with the username and password.
 
-1. The route is defined: $this->addRoute('POST', '/auth/login', 'MyApp\\Auth\\AuthAction:login');
-2. Chassis matches the route, creates an instance of MyApp\\Auth\\AuthAction, injects a WebRequest object into it, and triggers the login() method.
+1. The route is defined: $this->addRoute('POST', '/auth/login', 'App\\Auth\\AuthAction:login');
+2. Chassis matches the route, creates an instance of App\\Auth\\AuthAction, injects a WebRequest object into it, and triggers the login() method.
 3. AuthAction bootstraps itself in the constructor - it sets up the AuthResponder, and the AuthService. The WebRequest is already available in $this->request.
 4. In the login() method, AuthAction grabs the username and password from the WebRequest and passes it to AuthService method for logging in users, which is also called login().
 5. AuthService is a little black box of logic that takes the info, does whatever it needs to do to communicate with the database, and tosses back either the user's information if the login was successful, or false if it wasn't.
@@ -167,3 +177,8 @@ Each entity requires a label and is retrieved by calling `getEntity('labelname')
 
 The ObjectCollection can be created and added to the service class constructors, or injected into them. It's a plain PHP class, no magic going on there.
 
+## A note on PSR-7
+
+I apologise for not implementing PSR-7 for WebRequests. I may do so in future, but having spent a week trying to get it to work, I've left it alone for now. As PSR-7 only specifies HTTP requests, and Chassis handles both HTTP and CLI in the same stack, I found that I couldn't implement middleware (as per PSR-15) that could handle both.
+
+I'll revisit it in a later version. For now, I've added some generic middleware functionality.
