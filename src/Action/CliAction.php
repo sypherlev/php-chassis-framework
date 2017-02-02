@@ -6,8 +6,12 @@ use Chassis\Request\CliRequest;
 
 class CliAction extends AbstractAction
 {
-    /* @var CliRequest */
     private $request;
+
+    public function __construct(CliRequest $request)
+    {
+        $this->request = $request;
+    }
 
     public function getRequest()
     {

@@ -2,19 +2,12 @@
 
 namespace Chassis\Action;
 
-use Chassis\Request\RequestInterface;
 use Chassis\Response\ResponseInterface;
 
 abstract class AbstractAction implements ActionInterface
 {
     private $executable = true;
     private $methodname;
-    private $request;
-
-    public function __construct(RequestInterface $request)
-    {
-        $this->request = $request;
-    }
 
     public function setup($methodname)
     {
@@ -41,10 +34,5 @@ abstract class AbstractAction implements ActionInterface
     public function enableExecution()
     {
         $this->executable = true;
-    }
-
-    public function getRequest()
-    {
-        return $this->request;
     }
 }
