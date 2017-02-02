@@ -49,7 +49,7 @@ class WebRequest extends AbstractRequest
 
     public function getPostVar($name) {
         if(isset($this->requestdata['post'][$name])) {
-            return $this->sanitize($this->requestdata['post'][$name]);
+            return $this->requestdata['post'][$name];
         }
         else {
             return null;
@@ -58,7 +58,7 @@ class WebRequest extends AbstractRequest
 
     public function getBodyVar($name) {
         if (isset($this->requestdata['body'][$name])) {
-            return $this->sanitize($this->requestdata['body'][$name]);
+            return $this->requestdata['body'][$name];
         }
         else {
             return null;
