@@ -6,7 +6,7 @@ use FastRoute;
 
 class Router
 {
-    /* @var FastRoute\simpleDispatcher */
+    /* @var FastRoute\Dispatcher */
     private $dispatcher;
 
     private $routes;
