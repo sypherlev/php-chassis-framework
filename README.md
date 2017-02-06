@@ -4,7 +4,7 @@ Chassis is a microframework/collection-of-stuff-loosely-held-together-with-strin
 
 It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done. Apart from that, Chassis uses the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go. The WebResponse uses Twig templates.
 
-It's largely the result of my streamlining my own development process, following my own rules for OOP and the ADR design pattern. This particular version consists of the framework itself and a few other things in /app so I can keep all it all somewhat organized. It uses the bare minimum of code to wire together some common packages to handle web and command line requests.
+It's largely the result of my streamlining my own development process, following my own rules for OOP and the ADR design pattern. This particular version consists of the framework itself and a few other things in /src so I can keep all it all somewhat organized. It uses the bare minimum of code to wire together some common packages to handle web and command line requests.
 
 It has the following out of the box:
 
@@ -45,7 +45,7 @@ Use it at your own risk.
 
 ## The various bits of the framework
 
-Chassis is composed of two main parts - the /src folder, where all the framework's magical crap lives, and the /app folder, where YOUR magical crap lives.
+Chassis is composed of several folders which broadly conform to the [PHP-PDS Skeleton](https://github.com/php-pds/skeleton).  
 
 You've also got the /migrations folder, which the Migrate tool uses. There's one migration in there right now that'll make a few user tables, if you need to get going quickly. 
 
@@ -53,7 +53,7 @@ If your .env file sets `devmode=true` then an /emails folder will appear with co
 
 The /public folder has all the front-end goodness, like your JS and CSS assets. The /cache folder is where the Twig cache stuff is stored. The /templates folder contains all the Twig templates.
 
-Inside the /app folder, I've added the following:
+Inside the /src folder, I've added the following:
 
 * /Common: classes which may be used in a few different places; a catch-all for stuff that doesn't fit easily anywhere else
 * /DBAL: data classes, or anything that interacts with the database
@@ -89,7 +89,7 @@ In the project root, run `bin/chassis` to see options for migrations. (You may n
 
 ## Your first route
 
-All your routes are stored in /app/RouteCollection.php. RouteCollection has one method, the constructor, which contains a list of routes. RouteCollection is basically just an extension of the FastRoute dispatcher that registers all your routes before the framework kicks off. List them all here - follow the examples there if you're not sure - and group them using comments. They all follow the same FastRoute style:
+All your routes are stored in /src/RouteCollection.php. RouteCollection has one method, the constructor, which contains a list of routes. RouteCollection is basically just an extension of the FastRoute dispatcher that registers all your routes before the framework kicks off. List them all here - follow the examples there if you're not sure - and group them using comments. They all follow the same FastRoute style:
 
     $this->addRoute('POST', '/this_is_a_pattern', 'Namespace\\Domain\\Folder\\Classname:methodname');
     
@@ -123,7 +123,7 @@ The point of all this is that each part - the action, the domain object, and the
 
 ## Example
 
-In /app/Auth, I've got some classes that do user signin and creation (somewhat half-assedly, sorry). Here's how it would work for a form, submitted through AngularJS, with the username and password.
+In /src/Auth, I've got some classes that do user signin and creation (somewhat half-assedly, sorry). Here's how it would work for a form, submitted through AngularJS, with the username and password.
 
 1. The route is defined: $this->addRoute('POST', '/auth/login', 'App\\Auth\\AuthAction:login');
 2. Chassis matches the route, creates an instance of App\\Auth\\AuthAction, injects a WebRequest object into it, and triggers the login() method.
