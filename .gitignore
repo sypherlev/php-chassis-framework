@@ -3,3 +3,5 @@
 .env
 /cache/*
 !/cache/.gitkeep
+/bin/*
+!/bin/.gitkeep
