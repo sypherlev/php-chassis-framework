@@ -5,66 +5,23 @@ namespace App;
 use Chassis\Data\SourceBootstrapper;
 use App\Common\Security;
 use App\DBAL;
+use League\Container\Container;
 
-class ObjectCollection
+class ObjectCollection extends Container
 {
-    private $collection = [];
-    private $currentlyActive = [];
-
     public function __construct() {
 
+        parent::__construct();
+
         // bootstrapper and sources
-
-        $this->addEntity('bootstrapper', function(){
-            return new SourceBootstrapper();
-        });
-
-        $this->addEntity('local-source', function() {
-            $bootstrapper = $this->getEntity('bootstrapper');
-            if($bootstrapper) {
-                return $bootstrapper->generateSource('local');
-            }
-            return false;
-        });
+        $this->add('bootstrapper', new SourceBootstrapper);
+        $this->add('local-source', $this->get('bootstrapper')->generateSource('local'));
 
         // DBAL entities
-
-        $this->addEntity('auth-local', function(){
-            $localsource = $this->getEntity('local-source');
-            if($localsource) {
-                return new DBAL\AuthData($localsource);
-            }
-            return false;
-        });
-
-        $this->addEntity('user-local', function(){
-            $localsource = $this->getEntity('local-source');
-            if($localsource) {
-                return new DBAL\UserData($localsource);
-            }
-            return false;
-        });
+        $this->add('auth-local', new DBAL\AuthData($this->get('local-source')));
+        $this->add('user-local', new DBAL\UserData($this->get('local-source')));
 
         // extended services
-
-        $this->addEntity('security', function(){
-            $authsource = $this->getEntity('auth-local');
-            return new Security($authsource);
-        });
-    }
-
-    public function getEntity($name) {
-        if(isset($this->currentlyActive[$name])) {
-            return $this->currentlyActive[$name];
-        }
-        if(isset($this->collection[$name])) {
-            $this->currentlyActive[$name] = call_user_func($this->collection[$name]);
-            return $this->currentlyActive[$name];
-        }
-        return false;
-    }
-
-    public function addEntity($name, \Closure $generator) {
-        $this->collection[$name] = $generator;
+        $this->add('security', new Security($this->get('auth-local')));
     }
 }
