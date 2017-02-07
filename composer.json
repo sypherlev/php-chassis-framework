@@ -11,7 +11,7 @@
   },
   "require": {
     "php": ">=7.0",
-    "sypherlev/chassis-core": "~1.0",
+    "sypherlev/chassis-core": "@dev",
     "sypherlev/architect": "@dev"
   },
   "require-dev": {
