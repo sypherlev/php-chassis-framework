@@ -100,7 +100,7 @@ The router matches the route, creates an object of type Classname, and triggers 
 
 WebAction and CliAction correspond to whether Chassis has received a request from either a browser or the command line, which is accessed with `getRequest()`. If it's come from a browser, your WebAction-extending Classname will have access to a Request object that contains methods to pull stuff out of $_POST, $_GET, $FILE, $_COOKIE, php://input, and the list of URL segments (if any). If it's come from the command line, your CliAction-extending Classname will get a Request object that has methods for getting the command line arguments.
 
-Both Action classes also have the MiddlewareCollection and ObjectCollection injected into them, which are accessed using `getMiddleware()` and `getContainer()` . You can override their constructors if you want, but they also include an init() bootstrapper function to save you having to write some code.
+Both Action classes also have the MiddlewareCollection injected into them, which is accessed using `getMiddleware()`. You can override their constructors if you want, but they also include an init() bootstrapper function to save you having to write some code.
 
 You can't call a CliAction from a browser, or a WebAction from the command line, without Chassis giving you fatal errors about getting the wrong request type. You can create your own Action class as long as you implement Chassis\Action\ActionInterface; just be aware that calling it from the browser or command line will cause a Request object of the corresponding type to be injected into it.
 
