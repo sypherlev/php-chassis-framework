@@ -1,10 +1,10 @@
 # The Chassis Framework
 
-Chassis is a microframework/collection-of-stuff-loosely-held-together-with-string that's designed to be dangerously flexible. It will not hold your hand, or prevent you from making horrible choices. It will get requests from the web or command line into your business domain, and do something with the data that comes out, and otherwise stay out of your way. You don't even need to use half of it if you don't want to.
+Chassis is a microframework/collection-of-stuff-loosely-held-together-with-string that's designed to be dangerously flexible. It will not hold your hand, or prevent you from making horrible choices. It will get requests from the web or command line into your business domain, and do something with the data that comes out, and otherwise stay out of your way. It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done. 
 
-It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done. Apart from that, Chassis uses the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go. The WebResponse uses Twig templates.
+Chassis was designed for data processing above all else, so the database layer is completely decoupled and can be swapped out with anything. It includes the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go. The WebResponse uses Twig templates.
 
-It's largely the result of my streamlining my own development process, following my own rules for OOP and the ADR design pattern. This particular version consists of the framework itself and a few other things in /src so I can keep all it all somewhat organized. It uses the bare minimum of code to wire together some common packages to handle web and command line requests.
+It uses the bare minimum of code to wire together some common packages to handle web and command line requests.
 
 It has the following out of the box:
 
@@ -14,11 +14,10 @@ It has the following out of the box:
 * Five basic response types: API, Email, File, CLI, and Web (optional)
 * A very simple service locator (optional)
 * Basic middleware implementation (optional)
-* The Blueprint query builder (optional)
+* The Blueprint query builder + `bin/architect` to generate data files (optional)
 
 It does not have the following out of the box:
 
-* Code generation
 * An ORM
 * A logging system
 * Input Validation
@@ -47,7 +46,7 @@ Use it at your own risk.
 
 Chassis is composed of several folders which broadly conform to the [PHP-PDS Skeleton](https://github.com/php-pds/skeleton).  
 
-You've also got the /migrations folder, which the Migrate tool uses. There's one migration in there right now that'll make a few user tables, if you need to get going quickly. 
+You've also got the /migrations folder, which the `bin/chassis` migration tool uses. There's one migration in there right now that'll make a few user tables, if you need to get going quickly. 
 
 If your .env file sets `devmode=true` then an /emails folder will appear with copies of emails sent by the EmailResponse object, and no emails will actually be sent. Using `devmode` will also set Twig to `debug=true`. 
 
@@ -60,7 +59,7 @@ Inside the /src folder, I've added the following:
 * /Domain: the business domain, where most of your app's logic is going to run
 * /Middleware: the various middleware classes
 * Class MiddlewareCollection: where you can store middleware queues, to be used in Actions later
-* Class ObjectCollection: the very basic service locator that I will probably replace with something better
+* Class ObjectCollection: the very basic wrapper around `league/container`
 * Class RouteCollection: the routing list
 
 ## Setup
@@ -97,13 +96,15 @@ The router matches the route, creates an object of type Classname, and triggers 
 
 ## The Actions
 
-WebAction and CliAction correspond to whether Chassis has received a request from either a browser or the command line. If it's come from a browser, your WebAction-extending Classname will have access to a Request object that contains methods to pull stuff out of $_POST, $_GET, $FILE, $_COOKIE, php://input, and the list of URL segments (if any). If it's come from the command line, your CliAction-extending Classname will get a Request object that has methods for getting the command line arguments and a few other things.
+WebAction and CliAction correspond to whether Chassis has received a request from either a browser or the command line, which is accessed with `getRequest()`. If it's come from a browser, your WebAction-extending Classname will have access to a Request object that contains methods to pull stuff out of $_POST, $_GET, $FILE, $_COOKIE, php://input, and the list of URL segments (if any). If it's come from the command line, your CliAction-extending Classname will get a Request object that has methods for getting the command line arguments.
+
+Both Action classes also have the MiddlewareCollection and ObjectCollection injected into them, which are accessed using `getMiddleware()` and `getContainer()` . You can override their constructors if you want, but they also include an init() bootstrapper function to save you having to write some code.
 
 You can't call a CliAction from a browser, or a WebAction from the command line, without Chassis giving you fatal errors about getting the wrong request type. You can create your own Action class as long as you implement Chassis\Action\ActionInterface; just be aware that calling it from the browser or command line will cause a Request object of the corresponding type to be injected into it.
 
 ## Inside your new Classname
 
-At this point, the router has created an object of type Classname and invoked the method methodname. **This method cannot have any arguments.** Technically nothing needs to be passed into it because you already have access to whatever you need in the object's injected request.
+At this point, the router has created an object of type Classname, invoked the `init()` method, and invoked the method `methodname()`. **This method cannot have any arguments.** Technically nothing needs to be passed into it because you already have access to whatever you need in the Actions's injected dependencies.
 
 The most important thing to remember is that everything from this point on is optional, and can be replaced with anything you'd prefer to use instead of whatever comes with Chassis. All you have to do is shove it into your composer.json, and instantiate it here. You can arrange your code in any half-assed way you like, following any design pattern, and whether it works or not is all on you. Chassis hands off control to your Classname object and does absolutely nothing else, not even logging.
 
@@ -111,24 +112,26 @@ So now I'm just going to explain how I do things. Whether you want to follow alo
 
 ## The ADR Pattern
 
-ADR stands for Action-Domain-Response. This is an evolution of MVC proposed by Paul M. Jones that I find useful, so that's what I go with in a really vague kind of way. (Google it if you're curious.) The basic idea of my set up is as follows:
+ADR stands for Action-Domain-Response. This is an evolution of MVC proposed by Paul M. Jones that I find useful, so that's what I go with in a vague kind of way. (Google it if you're curious.) The basic set up in Chassis is as follows:
 
  * A request comes in and triggers an action.
- * The action knows two things: the command to get a response from the domain, and what kind of responder object to give the response to.
+ * The action knows two things: the command to get a response from the domain, and what kind of responder objects to give the response to. (You can have more than one responder in a single Action cycle. I usually use this to trigger email responses before sending back a web response.)
  * The action makes a call into the business domain by instantiating a particular business domain object and invoking one of its methods.
- * The action creates the responder and gives it the response from the domain.
- * The responder does whatever to produce the expected output.
+ * The action creates the responders and gives them the response from the domain.
+ * The responders do whatever to produce the expected output.
 
 The point of all this is that each part - the action, the domain object, and the responder - doesn't need to know anything about the other parts except what to do with an input or output.
 
 ## Example
 
-In /src/Auth, I've got some classes that do user signin and creation (somewhat half-assedly, sorry). Here's how it would work for a form, submitted through AngularJS, with the username and password.
+I keep Actions and Responders grouped with their respective Domain objects, but you can arrange these however.
 
-1. The route is defined: $this->addRoute('POST', '/auth/login', 'App\\Auth\\AuthAction:login');
-2. Chassis matches the route, creates an instance of App\\Auth\\AuthAction, injects a WebRequest object into it, and triggers the login() method.
+In /src/Domain/Auth, I've got some classes that do user signin and creation (somewhat half-assedly, sorry). Here's how it would work for a form, submitted through AngularJS, with the username and password.
+
+1. The route is defined: `$this->addRoute('POST', '/auth/login', 'App\\Auth\\Domain\\AuthAction:login');`
+2. Chassis matches the route, creates an instance of `App\\Auth\\Domain\\AuthAction`, injects a WebRequest object into it along with the collection objects, and triggers the `login()` method.
 3. AuthAction bootstraps itself in the constructor - it sets up the AuthResponder, and the AuthService. The WebRequest is already available in $this->request.
-4. In the login() method, AuthAction grabs the username and password from the WebRequest and passes it to AuthService method for logging in users, which is also called login().
+4. In the `login()` method, AuthAction grabs the username and password from the WebRequest and passes it to the AuthService method for logging in users, which is also called `login()`.
 5. AuthService is a little black box of logic that takes the info, does whatever it needs to do to communicate with the database, and tosses back either the user's information if the login was successful, or false if it wasn't.
 6. AuthAction does nothing with the response other than give it to the AuthResponder.
 7. The AuthResponder extends the ApiResponse class, so it handles whatever it's given and emits an API response - a nicely formatted JSON that Angular will recognize.
@@ -141,41 +144,20 @@ Right now I have the following types built-in:
  * Email - uses PHPMailer to send an email
  * File - uses readfile() to throw files at the browser
  * Web - Puts data into Twig templates
- * CLI - command line output
+ * Cli - command line output
  
-## The Object Collection
+## The ObjectCollection and MiddlewareCollection classes
 
-Using the ObjectCollection is optional. It's a very basic service locator that allows for mixing and matching service objects without creating new copies of the DBAL classes or additional database connections. It has only two methods: `addEntity` and `getEntity`.
+ObjectCollection is a wrapper around `league/container`. [See the docs](http://container.thephpleague.com/) for how to use it.
 
-You can substitute any dependency injection container or service locator you prefer.
+MiddlewareCollection is a very basic middleware implementation which I will likely try to replace with something else later. The current class holds an example of a queue - a Process object with a bunch of callables added to it.
 
-In the ObjectCollection constructor, use `$this->addEntity(...)` to store Closures that will generate the objects you need.
+Running a queue works as follows:
 
-    $this->addEntity('bootstrapper', function(){
-        return new SourceBootstrapper();
-    });
-    
-You can use `getEntity` in Closures to check if the objects you need have been created, and use them to create other objects.
-
-    $this->addEntity('local-source', function() {
-        $bootstrapper = $this->getEntity('bootstrapper');
-        if($bootstrapper) {
-            return $bootstrapper->generateSource('local');
-        }
-        return false;
-    });
-    
-    $this->addEntity('user-local', function(){
-        $localsource = $this->getEntity('local-source');
-        if($localsource) {
-            return new DBAL\UserData($localsource);
-        }
-        return false;
-    });
-    
-Each entity requires a label and is retrieved by calling `getEntity('labelname')`.
-
-The ObjectCollection can be created and added to the service class constructors, or injected into them. It's a plain PHP class, no magic going on there.
+ * Create an Entity object in your Action.
+ * Shove data into it using `addData`.
+ * $this->getMiddleware()->run('queuename', $entity);
+ * Get data out of $entity with `getData` (for specifics) or `getAllData` (for everything).
 
 ## A note on PSR-7
 
