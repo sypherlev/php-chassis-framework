@@ -3,18 +3,18 @@
 namespace App\Domain\Sample;
 
 use Chassis\Action\WebAction;
-use Chassis\Request\WebRequest;
 
 class SampleAction extends WebAction
 {
+    /* @var SampleService */
     private $sampleservice;
+    /* @var SampleResponder */
     private $responder;
 
-    public function __construct(WebRequest $request)
+    public function init()
     {
-        parent::__construct($request);
         $this->sampleservice = new SampleService();
-        $this->responder = new SecureResponder();
+        $this->responder = new SampleResponder();
         if(!$this->sampleservice->isAllowed()) {
             $this->disableExecution($this->responder);
         }
