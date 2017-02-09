@@ -2,13 +2,15 @@
 
 Chassis is a microframework/collection-of-stuff-loosely-held-together-with-string that's designed to be dangerously flexible. It will not hold your hand, or prevent you from making horrible choices. It will get requests from the web or command line into your business domain, and do something with the data that comes out, and otherwise stay out of your way. It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done. 
 
-Chassis was designed for data processing above all else, so the database layer is completely decoupled and can be swapped out with anything. It includes the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go. The WebResponse uses Twig templates.
+Chassis was designed for the kind of complex data-driven applications I create, so it's heavily geared towards PHP developers who also manange their own relational databases. If you're not completely comfortable with database management and SQL, this is not the framework for you. 
+
+The database layer is completely decoupled and can be swapped out with anything. It includes the Blueprint extended query builder for interacting with MySQL/MariaDB databases (optional), a migration tool built on top of that (optional), and a set of Request classes to get shit into your domain (not optional), and a set of Response classes that build various responses for output (optional). The EmailResponse class uses PHPMailer to make things go. The WebResponse uses Twig templates.
 
 It uses the bare minimum of code to wire together some common packages to handle web and command line requests.
 
 It has the following out of the box:
 
-* A router
+* A router wrapper around FastRoute
 * A .env config file
 * Stuff to handle incoming requests
 * Five basic response types: API, Email, File, CLI, and Web (optional)
@@ -130,7 +132,7 @@ In /src/Domain/Auth, I've got some classes that do user signin and creation (som
 
 1. The route is defined: `$this->addRoute('POST', '/auth/login', 'App\\Auth\\Domain\\AuthAction:login');`
 2. Chassis matches the route, creates an instance of `App\\Auth\\Domain\\AuthAction`, injects a WebRequest object into it along with the collection objects, and triggers the `login()` method.
-3. AuthAction bootstraps itself in the constructor - it sets up the AuthResponder, and the AuthService. The WebRequest is already available in $this->request.
+3. AuthAction bootstraps itself in its `init()` method - it sets up the AuthResponder, and the AuthService. The WebRequest is already available in $this->request.
 4. In the `login()` method, AuthAction grabs the username and password from the WebRequest and passes it to the AuthService method for logging in users, which is also called `login()`.
 5. AuthService is a little black box of logic that takes the info, does whatever it needs to do to communicate with the database, and tosses back either the user's information if the login was successful, or false if it wasn't.
 6. AuthAction does nothing with the response other than give it to the AuthResponder.
@@ -163,4 +165,4 @@ Running a queue works as follows:
 
 I apologise for not implementing PSR-7 for WebRequests. I may do so in future, but having spent a week trying to get it to work, I've left it alone for now. As PSR-7 only specifies HTTP requests, and Chassis handles both HTTP and CLI in the same stack, I found that I couldn't implement middleware (as per PSR-15) that could handle both.
 
-I'll revisit it in a later version. For now, I've added some generic middleware functionality.
+I'll revisit it later.
