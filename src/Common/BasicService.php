@@ -13,7 +13,7 @@ class BasicService
     public function __construct()
     {
         $this->objectCollection = new ObjectCollection();
-        $this->security = $this->objectCollection->getEntity('security');
+        $this->security = $this->objectCollection->get('security');
     }
 
     public function isAllowed() {

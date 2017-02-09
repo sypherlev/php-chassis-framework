@@ -13,7 +13,7 @@ class SampleService extends BasicService
     public function __construct()
     {
         parent::__construct();
-        $this->usersource = $this->objectCollection->getEntity('user-local');
+        $this->usersource = $this->objectCollection->get('user-local');
         $this->security->setAllowedRoles(['user']);
     }
 
