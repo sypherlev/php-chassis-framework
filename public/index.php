@@ -8,6 +8,5 @@ $dotenv->load();
 $chassis = new Chassis\Ignition();
 $chassis->run(
     new \App\RouteCollection(),
-    new \App\ObjectCollection(),
     new \App\MiddlewareCollection()
 );
