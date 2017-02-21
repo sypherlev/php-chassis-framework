@@ -2,7 +2,7 @@
 
 namespace App\Domain\Sample;
 
-use Chassis\Action\WebAction;
+use SypherLev\Chassis\Action\WebAction;
 
 class SampleAction extends WebAction
 {

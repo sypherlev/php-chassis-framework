@@ -2,7 +2,7 @@
 
 namespace App\Domain\Index;
 
-use Chassis\Response\WebResponse;
+use SypherLev\Chassis\Response\WebResponse;
 
 class IndexResponder extends WebResponse
 {

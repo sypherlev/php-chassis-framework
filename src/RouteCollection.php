@@ -2,7 +2,7 @@
 
 namespace App;
 
-use Chassis\Router;
+use SypherLev\Chassis\Router;
 
 class RouteCollection extends Router
 {

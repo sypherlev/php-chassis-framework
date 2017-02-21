@@ -2,7 +2,7 @@
 
 namespace App\Domain\Auth;
 
-use Chassis\Response\ApiResponse;
+use SypherLev\Chassis\Response\ApiResponse;
 
 class AuthResponder extends ApiResponse
 {

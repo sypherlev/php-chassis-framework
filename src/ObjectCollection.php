@@ -2,7 +2,7 @@
 
 namespace App;
 
-use Chassis\Data\SourceBootstrapper;
+use SypherLev\Chassis\Data\SourceBootstrapper;
 use App\Common\Security;
 use App\DBAL;
 use League\Container\Container;

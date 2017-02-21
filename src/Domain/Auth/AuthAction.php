@@ -2,7 +2,7 @@
 
 namespace App\Domain\Auth;
 
-use Chassis\Action\WebAction;
+use SypherLev\Chassis\Action\WebAction;
 
 class AuthAction extends WebAction
 {

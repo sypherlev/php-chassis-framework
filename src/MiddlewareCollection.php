@@ -3,8 +3,8 @@
 namespace App;
 
 use App\Middleware\Sanitize;
-use Chassis\Middleware\Collection;
-use Chassis\Middleware\Process;
+use SypherLev\Chassis\Middleware\Collection;
+use SypherLev\Chassis\Middleware\Process;
 
 class MiddlewareCollection extends Collection
 {

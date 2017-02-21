@@ -2,8 +2,8 @@
 
 namespace App\Domain\Index;
 
-use Chassis\Action\WebAction;
-use Chassis\Middleware\Entity;
+use SypherLev\Chassis\Action\WebAction;
+use SypherLev\Chassis\Middleware\Entity;
 
 class IndexAction extends WebAction
 {

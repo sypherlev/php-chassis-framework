@@ -2,7 +2,7 @@
 
 namespace App\Domain\Sample;
 
-use Chassis\Response\ApiResponse;
+use SypherLev\Chassis\Response\ApiResponse;
 
 class SampleResponder extends ApiResponse
 {
