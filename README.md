@@ -114,7 +114,7 @@ So now I'm just going to explain how I do things. Whether you want to follow alo
 
 ## The ADR Pattern
 
-ADR stands for Action-Domain-Response. This is an evolution of MVC proposed by Paul M. Jones that I find useful, so that's what I go with in a vague kind of way. (Google it if you're curious.) The basic set up in Chassis is as follows:
+ADR stands for Action-Domain-Response. This is an evolution of MVC proposed by Paul M. Jones that I find useful. (Google it if you're curious.) The basic set up in Chassis is as follows:
 
  * A request comes in and triggers an action.
  * The action knows two things: the command to get a response from the domain, and what kind of responder objects to give the response to. (You can have more than one responder in a single Action cycle. I usually use this to trigger email responses before sending back a web response.)
