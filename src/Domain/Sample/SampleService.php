@@ -14,10 +14,10 @@ class SampleService extends BasicService
     {
         parent::__construct();
         $this->usersource = $this->objectCollection->get('user-local');
-        $this->security->setAllowedRoles(['user']);
+        $this->getSecurityPass()->setAllowedRoles(['user']);
     }
 
     public function sampleMethodCall() {
-        return $this->usersource->getUser($this->security->getCurrentUser()->getUserId(), 'summary');
+        return $this->usersource->getUser($this->getSecurityPass()->getCurrentUser()->getUserId(), 'summary');
     }
 }
