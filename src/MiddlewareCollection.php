@@ -4,14 +4,14 @@ namespace App;
 
 use App\Middleware\Sanitize;
 use SypherLev\Chassis\Middleware\Collection;
-use SypherLev\Chassis\Middleware\Process;
+use SypherLev\Chassis\Middleware\WebProcess;
 
 class MiddlewareCollection extends Collection
 {
     public function __construct()
     {
         $this->loadQueue('default',
-            (new Process())
+            (new WebProcess())
                 ->add(new Sanitize())
                 ->add(function($input, \Closure $next){
                     $input .= "1";
