@@ -8,7 +8,7 @@ class BasicService
 {
     protected $objectCollection;
     /* @var Security */
-    protected $security;
+    private $security;
 
     public function __construct()
     {
@@ -16,7 +16,7 @@ class BasicService
         $this->security = $this->objectCollection->get('security');
     }
 
-    public function isAllowed() {
-        return $this->security->isAllowed();
+    public function getSecurityPass() {
+        return $this->security;
     }
 }
