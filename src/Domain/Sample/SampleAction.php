@@ -15,7 +15,7 @@ class SampleAction extends WebAction
     {
         $this->sampleservice = new SampleService();
         $this->responder = new SampleResponder();
-        if(!$this->sampleservice->isAllowed()) {
+        if(!$this->sampleservice->getSecurityPass()->isAllowed()) {
             $this->disableExecution($this->responder);
         }
     }
