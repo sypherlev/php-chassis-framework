@@ -2,14 +2,17 @@
 
 namespace App\Middleware;
 
+use SypherLev\Chassis\Request\Web;
+
 class Sanitize
 {
     private $allowedtags =
         '<p><hr><em><strong><blockquote><b><i><u><sup><sub><strike><h1><h2><h3><h4><h5><h6><table><th><td><tbody><thead><ul><ol><li>';
 
-    public function __invoke($input, \Closure $next)
+    public function __invoke(Web $input, \Closure $next)
     {
-        return $next($this->sanitize($input));
+        $input->overwriteMiddlewareVar('input', $this->sanitize($input->getMiddlewareVar('input')));
+        return $next($input);
     }
 
     private function sanitize($input) {

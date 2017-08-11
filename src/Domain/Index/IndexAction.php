@@ -16,6 +16,7 @@ class IndexAction extends WebAction
     }
 
     public function middleware() {
-        print_r($this->getMiddleware()->run('default', new Entity()));
+        $this->getRequest()->addMiddlewareVar('input', 'Testing middleware input');
+        print_r($this->getMiddleware()->run('default', $this->getRequest()));
     }
 }
