@@ -9,7 +9,7 @@
 * [How I build stuff using Chassis](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/MyLayout.md)
 * [Future stuff to add](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Future.md)
 
-Chassis is a microframework/collection-of-stuff-loosely-held-together-with-string that's designed to be dangerously flexible. It will not hold your hand, or prevent you from making horrible choices, or stop you from writing shitty code. It will get requests from the web or command line into your business domain, and do something with the data that comes out, and otherwise stay out of your way. It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done. 
+Chassis is a microframework/collection-of-stuff-loosely-held-together-with-string that's designed to be dangerously flexible. It will not hold your hand, or prevent you from making horrible choices, or stop you from writing shitty code. It will get requests from the web or command line into your business domain, and do something with the data that comes out, and otherwise stay out of your way. It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done.
 
 It was designed with the following in mind:
 * Swap out all the things if needed
@@ -17,7 +17,9 @@ It was designed with the following in mind:
 * Handle web and command line together
 * Separation of concerns is easy
 
-It evolved as a data-processing rapid development framework that had to be rearranged constantly, so every part of it after the initial request bootstrapping is optional.
+It was designed as a data-processing rapid development framework that can be rearranged on the fly, so every part of it after the initial request bootstrapping is modular.
+
+*Note: if you're not building large data-processing applications with evolving project requirements, then you're probably better off getting something like Laravel or CakePHP. Chassis can be used for CRUD work, but it's not really designed with that in mind, or for beginner developers in general.*
 
 It uses the bare minimum of code to wire together some common packages to handle web and command line requests.
 
