@@ -7,8 +7,8 @@
 * [Web routing and CLI](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Routing.md)
 * [Actions, the service locator, and middleware](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Actions.md)
 * [Response types](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Responses.md)
-* [How I build stuff using Chassis](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/MyLayout.md)
-* [Future stuff to add](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Future.md)
+* [Example Request-Response cycle](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/MyLayout.md)
+* [Future features to add](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Future.md)
 
 Chassis is a microframework/collection-of-stuff-loosely-held-together-with-string that's designed to be dangerously flexible. It will not hold your hand, or prevent you from making horrible choices, or stop you from writing shitty code. It will get requests from the web or command line into your business domain, and do something with the data that comes out, and otherwise stay out of your way. It uses FastRoute and dotENV to do the initial request bootstrapping, and after that, it's all you, baby. You build whatever Frankenstein code you need to get things done.
 

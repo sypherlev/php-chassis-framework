@@ -1,6 +1,6 @@
-## How I use it
+## Example Request-Response Cycle
 
-I'm just going to explain how I do things. Whether you want to follow along or do your own thing is up to you. Again, Chassis is flexible and you can set it up any weird way you like, once you're inside an Action object.
+Chassis is flexible and you can set it up any weird way you like, once you're inside an Action object. The following describes how I structure my applications as an example.
 
 I usually have Chassis set up in a broad ADR pattern. (ADR stands for Action-Domain-Response. This is an evolution of MVC proposed by Paul M. Jones that I find useful. Google it if you're curious.) The basic set up is as follows:
 
