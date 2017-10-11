@@ -8,7 +8,7 @@ If you want to use something else, you can. All you have to do is set up your ow
 
 Data classes (stored in /src/DBAL) are added to the ObjectCollection by their namespace. Chassis includes a bootstrapper class called SourceBootstrapper that can be used to create a Blueprint Source object.
 
-First, the Source is added to the ObjectCollection. The SourceBootstrapper can determine what kind of Source (MySQL or PostgreSQL) from the Chassis .env file database parameters if you pass the database prefix to it.
+First, the Source is generated and added to the ObjectCollection. The SourceBootstrapper can determine what kind of Source (MySQL or PostgreSQL) to generate from the Chassis .env file database parameters if you pass the database prefix to it.
 
 `$this->add('local-source', SourceBootstrapper::generateSource('local'));`
 
