@@ -30,3 +30,7 @@ Chassis includes a very basic database migration tool based on Blueprint. It mus
 The bootstrap.sql file in /migrations has user tables which plug into the Auth system in this sample, but the only one that's really required is the migrations table.
 
 In the project root, run `bin/chassis` to see options for migrations. (You may need to make it executable first.)
+
+## Data class generation with Architect
+
+Chassis includes Architect, a command line utility for creating basic Blueprint Data classes. [See the documentation here](https://github.com/sypherlev/architect).
