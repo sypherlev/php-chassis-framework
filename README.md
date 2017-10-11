@@ -3,6 +3,7 @@
 * [Setup](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Setup.md)
 * [Migration](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Migration.md)
 * [The framework's basic layout](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/FrameworkBits.md)
+* [The database](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Database.md)
 * [Web routing and CLI](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Routing.md)
 * [Actions, the service locator, and middleware](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Actions.md)
 * [Response types](https://github.com/sypherlev/php-chassis-framework/blob/master/docs/Responses.md)

@@ -28,4 +28,4 @@ Add your database details in the following format, if you're using Blueprint:
     
 The prefix is used to identify the database. See the .env_sample for how it should look. You can add any number of databases in here as long as they all have different prefixes.
 
-You can add any environment variables here; see the docs for dotENV for more information.
+You can add any environment variables here; see the docs for [dotENV](https://github.com/vlucas/phpdotenv) for more information. Retrieve them with `getenv()`.
