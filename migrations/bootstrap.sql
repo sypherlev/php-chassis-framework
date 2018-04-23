@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `last_name` varchar(50) DEFAULT NULL,
   `email` varchar(100) NOT NULL,
   `authkey` varchar(255) DEFAULT NULL,
-  `cookietoken` varchar(45) DEFAULT NULL,
+  `cookietoken` varchar(255) DEFAULT NULL,
   `authexpiry` int(11) NOT NULL DEFAULT '0',
   `created_on` int(11) SIGNED NOT NULL,
   `last_login` int(11) SIGNED DEFAULT NULL,
