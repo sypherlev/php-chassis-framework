@@ -32,12 +32,12 @@ It has the following out of the box:
 * Five basic response types: API, Email, File, CLI, and Web
 * A very simple service locator
 * Basic middleware implementation
+* Basic Logger class
 * The Blueprint query builder + `bin/architect` to generate data files
 
 It does not have the following out of the box:
 
 * An ORM
-* A logging system
 * PSR-7 compliance
 * Input Validation
 * Anything to do with encryption
