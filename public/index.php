@@ -7,6 +7,5 @@ $dotenv->load();
 
 $chassis = new SypherLev\Chassis\Ignition();
 $chassis->run(
-    new \App\RouteCollection(),
-    new \App\MiddlewareCollection()
+    new \App\RouteCollection()
 );
