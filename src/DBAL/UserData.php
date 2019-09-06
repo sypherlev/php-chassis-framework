@@ -13,18 +13,24 @@ class UserData extends Blueprint
     {
         parent::__construct($datasource, $query);
 
-        $this->addPattern('external', function () {
-            return (new Pattern())->table('users')
-                ->columns(['username', 'first_name', 'last_name', 'email']);
-        });
+        try {
 
-        $this->addPattern('internal', function () {
-            return (new Pattern())->table('users')->columns(['*']);
-        });
+            $this->addPattern('external', function () {
+                return (new Pattern())->table('users')
+                    ->columns(['username', 'first_name', 'last_name', 'email']);
+            });
 
-        $this->addPattern('update', function () {
-            return (new Pattern())->table('users')->columns(['first_name', 'last_name']);
-        });
+            $this->addPattern('internal', function () {
+                return (new Pattern())->table('users')->columns(['*']);
+            });
+
+            $this->addPattern('update', function () {
+                return (new Pattern())->table('users')->columns(['first_name', 'last_name']);
+            });
+        }
+        catch (\Exception $e) {
+
+        }
     }
 
     // SELECT

@@ -6,9 +6,7 @@ I usually have Chassis set up in a broad ADR pattern. (ADR stands for Action-Dom
 
  * A request comes in and triggers an action object.
  * The action knows two things: the commands to get a response from the domain, and what kind of responder objects to give the response to. (You can have more than one responder in a single Action cycle. I usually use this to trigger email responses before sending back a web response.)
- * The action runs any pre-processing middleware queues I've defined.
  * The action makes a call into the business domain by instantiating a particular service object and invoking one of its methods.
- * The action runs any post-processing middleware queues I've defined.
  * The action creates the responders and gives them the response from the domain.
  * The responders do whatever to produce the expected output.
 

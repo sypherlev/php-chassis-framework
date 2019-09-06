@@ -13,8 +13,6 @@ Inside the /src folder, I've added the following:
 * /Common: classes which may be used in a few different places; a catch-all for stuff that doesn't fit easily anywhere else
 * /DBAL: data classes, or anything that interacts with the database
 * /Domain: the business domain, where most of your app's logic is going to run
-* /Middleware: the various middleware classes
-* Class MiddlewareCollection: where you can store middleware queues, to be used in Actions later
 * Class ObjectCollection: the very basic wrapper around `league/container`
 * Class RouteCollection: the routing list
 
